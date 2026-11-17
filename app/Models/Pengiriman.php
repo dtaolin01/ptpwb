@@ -15,21 +15,33 @@ class Pengiriman extends Model
         'tanggal_kirim', 'estimasi_tiba', 'status',
         'asal', 'asal_lat', 'asal_lng', 'tujuan_lat', 'tujuan_lng',
         'posisi_lat', 'posisi_lng', 'posisi_update',
+        'waktu_tiba_pabrik', 'waktu_keluar_pabrik', 'waktu_tiba_tujuan',
     ];
 
     protected $casts = [
         'tanggal_kirim' => 'date',
         'estimasi_tiba' => 'date',
         'posisi_update' => 'datetime',
+        'waktu_tiba_pabrik'   => 'datetime',
+        'waktu_keluar_pabrik' => 'datetime',
+        'waktu_tiba_tujuan'   => 'datetime',
     ];
 
     // status => [label, warna badge]
+    // Urutan = alur perjalanan. Tahap menuju_pabrik s/d tiba diatur otomatis dari lokasi HP supir
+    // (lihat App\Support\ProgresPengiriman).
     public const STATUS = [
-        'menunggu'         => ['Menunggu',         'amber'],
-        'dalam_perjalanan' => ['Dalam Perjalanan', 'green'],
-        'terkirim'         => ['Terkirim',         'blue'],
-        'tertunda'         => ['Tertunda',         'red'],
+        'menunggu'         => ['Menunggu',              'amber'],
+        'menuju_pabrik'    => ['Menuju Pabrik',         'amber'],
+        'muat'             => ['Sedang Muat di Pabrik', 'amber'],
+        'dalam_perjalanan' => ['Dalam Pengiriman',      'green'],
+        'tiba'             => ['Tiba di Tujuan',        'green'],
+        'terkirim'         => ['Terkirim',              'blue'],
+        'tertunda'         => ['Tertunda',              'red'],
     ];
+
+    /** Status yang masih berjalan (muncul di aplikasi supir). */
+    public const STATUS_AKTIF = ['menunggu', 'menuju_pabrik', 'muat', 'dalam_perjalanan', 'tiba', 'tertunda'];
 
     public function pelanggan(): BelongsTo
     {
@@ -54,7 +66,7 @@ class Pengiriman extends Model
     /**
      * Langkah standar untuk pengiriman baru.
      */
-    public const LANGKAH_STANDAR = ['Pengiriman Diterima', 'Dalam Perjalanan', 'Menuju Tujuan', 'Tiba di Tujuan'];
+    public const LANGKAH_STANDAR = ['Pesanan Dibuat', 'Menuju Pabrik', 'Sedang Muat di Pabrik', 'Dalam Pengiriman', 'Tiba di Tujuan', 'Selesai'];
 
     /**
      * Buat nomor resi berikutnya: PWB-YYYYMMDD-0001.

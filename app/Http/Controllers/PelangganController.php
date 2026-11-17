@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pelanggan;
+use App\Support\Geocoder;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -23,6 +24,7 @@ class PelangganController extends Controller
             'kontak' => $p->kontak,
             'email'  => $p->email,
             'alamat' => $p->alamat,
+            'lokasi' => $p->titik() !== null,
             'edit'   => route('pelanggan.edit', $p),
             'hapus'  => route('pelanggan.destroy', $p),
         ]);
@@ -37,9 +39,11 @@ class PelangganController extends Controller
 
     public function store(Request $request)
     {
-        Pelanggan::create($this->validasi($request));
+        $data = $this->validasi($request);
+        $pelanggan = Pelanggan::create($this->tanpaTitik($data));
+        $ketemu = $this->simpanTitik($pelanggan, $data, true);
 
-        return redirect()->route('pelanggan')->with('success', 'Data pelanggan berhasil ditambahkan.');
+        return $this->kembali($pelanggan, $ketemu, 'Data pelanggan berhasil ditambahkan.');
     }
 
     public function edit(Pelanggan $pelanggan)
@@ -49,9 +53,70 @@ class PelangganController extends Controller
 
     public function update(Request $request, Pelanggan $pelanggan)
     {
-        $pelanggan->update($this->validasi($request, $pelanggan));
+        $data = $this->validasi($request, $pelanggan);
+        $alamatBerubah = trim((string) $pelanggan->alamat) !== trim($data['alamat']);
+        $pelanggan->update($this->tanpaTitik($data));
+        $ketemu = $this->simpanTitik($pelanggan, $data, $alamatBerubah || ! empty($data['cari_ulang']));
 
-        return redirect()->route('pelanggan')->with('success', 'Data pelanggan berhasil diperbarui.');
+        return $this->kembali($pelanggan, $ketemu, 'Data pelanggan berhasil diperbarui.');
+    }
+
+    /**
+     * Cari titik lokasi perusahaan dari alamatnya lalu simpan.
+     * Dipakai juga oleh form Tracking & perintah `php artisan pelanggan:lokasi`.
+     */
+    public static function isiLokasi(Pelanggan $pelanggan): bool
+    {
+        $hasil = Geocoder::cari($pelanggan->alamat);
+        if (! $hasil) {
+            return false;
+        }
+
+        $pelanggan->update([
+            'lat'           => $hasil['lat'],
+            'lng'           => $hasil['lng'],
+            'kota'          => $hasil['kota'] ?? $pelanggan->kota,
+            'lokasi_sumber' => 'otomatis',
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Titik dari peta (kalau admin menggeser/klik manual), atau dicari otomatis dari alamat.
+     * Mengembalikan false kalau alamat tidak ditemukan.
+     */
+    private function simpanTitik(Pelanggan $pelanggan, array $data, bool $cariUlang): bool
+    {
+        $manual = ($data['lokasi_sumber'] ?? null) === 'manual'
+            && ($data['lat'] ?? null) !== null && ($data['lng'] ?? null) !== null;
+
+        if ($manual) {
+            $pelanggan->update(['lat' => $data['lat'], 'lng' => $data['lng'], 'lokasi_sumber' => 'manual']);
+
+            return true;
+        }
+
+        if ($cariUlang || ! $pelanggan->titik()) {
+            return self::isiLokasi($pelanggan);
+        }
+
+        return true;
+    }
+
+    private function tanpaTitik(array $data): array
+    {
+        return array_intersect_key($data, array_flip(['nama', 'kontak', 'email', 'alamat']));
+    }
+
+    private function kembali(Pelanggan $pelanggan, bool $ketemu, string $pesan)
+    {
+        if (! $ketemu) {
+            return redirect()->route('pelanggan.edit', $pelanggan)
+                ->with('error', 'Data tersimpan, tetapi lokasi alamat tidak ditemukan otomatis. Klik lokasi perusahaan di peta lalu simpan lagi.');
+        }
+
+        return redirect()->route('pelanggan')->with('success', $pesan);
     }
 
     public function destroy(Pelanggan $pelanggan)
@@ -74,6 +139,10 @@ class PelangganController extends Controller
             'kontak' => ['required', 'string', 'max:100'],
             'email'  => ['required', 'email', 'max:150', Rule::unique('pelanggan', 'email')->ignore($pelanggan?->id)],
             'alamat' => ['required', 'string', 'max:255'],
+            'lat'    => ['nullable', 'numeric', 'between:-90,90'],
+            'lng'    => ['nullable', 'numeric', 'between:-180,180'],
+            'lokasi_sumber' => ['nullable', 'in:otomatis,manual'],
+            'cari_ulang'    => ['nullable', 'boolean'],
         ], [
             'email.unique' => 'Email sudah dipakai pelanggan lain.',
         ], [
