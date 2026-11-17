@@ -18,10 +18,11 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@pwb.test', 'password' => 'password'],
         );
 
+        // Hanya isi halaman website (layanan & kontak).
+        // Supir, Truck, Pelanggan, dan Tracking diisi sendiri oleh admin.
         $this->call([
             ServiceSeeder::class,
             ContactSeeder::class,
-            PwbSeeder::class,
         ]);
     }
 }
