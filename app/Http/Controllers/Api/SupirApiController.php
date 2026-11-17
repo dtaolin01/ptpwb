@@ -8,6 +8,7 @@ use App\Models\Pengiriman;
 use App\Models\SupirToken;
 use App\Models\Truck;
 use App\Support\PetaPengiriman;
+use App\Support\ProgresPengiriman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -27,8 +28,6 @@ use Illuminate\Support\Str;
  */
 class SupirApiController extends Controller
 {
-    /** Status yang dianggap "pesanan saat ini" — dalam perjalanan didahulukan. */
-    private const STATUS_AKTIF = ['dalam_perjalanan', 'menunggu', 'tertunda'];
 
     public function login(Request $request)
     {
@@ -90,12 +89,15 @@ class SupirApiController extends Controller
         $p = $this->pesananAktif($truck);
 
         // Waktu dari HP dipakai kalau masuk akal (tidak di masa depan / terlalu lama)
-        $waktu = isset($data['waktu']) ? Carbon::createFromTimestampMs($data['waktu']) : now();
+        // Epoch dari HP selalu UTC → ubah ke zona waktu website (WITA) sebelum disimpan
+        $waktu = isset($data['waktu'])
+            ? Carbon::createFromTimestampMs($data['waktu'])->setTimezone(config('app.timezone'))
+            : now();
         if ($waktu->isFuture() || $waktu->lt(now()->subDays(2))) {
             $waktu = now();
         }
 
-        DB::transaction(function () use ($data, $truck, $p, $waktu) {
+        $interval = DB::transaction(function () use ($data, $truck, $p, $waktu) {
             LokasiTruk::create([
                 'truck_id'      => $truck->id,
                 'pengiriman_id' => $p?->id,
@@ -105,17 +107,23 @@ class SupirApiController extends Controller
                 'waktu'         => $waktu,
             ]);
 
-            // Posisi truk di peta Tracking (website & admin) ikut berubah
-            $p?->update([
-                'posisi_lat'    => $data['lat'],
-                'posisi_lng'    => $data['lng'],
-                'posisi_update' => $waktu,
-            ]);
+            // Posisi truk di peta + status perjalanan maju otomatis
+            // (menuju pabrik → muat → pengiriman → tiba)
+            return $p
+                ? ProgresPengiriman::proses($p, (float) $data['lat'], (float) $data['lng'], $waktu)
+                : ProgresPengiriman::INTERVAL_NORMAL;
         });
+
+        $p?->refresh();
 
         return response()->json([
             'message'       => 'Lokasi tersimpan.',
             'pengiriman_id' => $p?->id,
+            'status'        => $p?->status,
+            'status_label'  => $p?->status_label,
+            // Aplikasi mengirim lokasi berikutnya setelah sekian menit
+            // (15 menit saat dekat pabrik/tujuan, selain itu 120 menit)
+            'interval_menit' => $interval,
         ]);
     }
 
@@ -125,7 +133,7 @@ class SupirApiController extends Controller
 
         $p = Pengiriman::where('id', $id)
             ->where('truck_id', $truck->id)
-            ->whereIn('status', self::STATUS_AKTIF)
+            ->whereIn('status', Pengiriman::STATUS_AKTIF)
             ->first();
 
         if (! $p) {
@@ -133,13 +141,7 @@ class SupirApiController extends Controller
         }
 
         DB::transaction(function () use ($p, $truck) {
-            $p->update(['status' => 'terkirim']);
-
-            // Langkah perjalanan yang belum selesai ditandai selesai
-            $p->events()->where('selesai', false)->each(function ($e) {
-                $e->update(['selesai' => true, 'waktu' => $e->waktu ?? now()]);
-            });
-
+            ProgresPengiriman::selesai($p);
             $truck->update(['status' => 'tersedia']);
         });
 
@@ -159,8 +161,9 @@ class SupirApiController extends Controller
     {
         return Pengiriman::with(['pelanggan', 'truck.supir'])
             ->where('truck_id', $truck->id)
-            ->whereIn('status', self::STATUS_AKTIF)
-            ->orderByRaw("CASE status WHEN 'dalam_perjalanan' THEN 0 WHEN 'menunggu' THEN 1 ELSE 2 END")
+            ->whereIn('status', Pengiriman::STATUS_AKTIF)
+            // Yang sedang berjalan didahulukan, lalu yang baru dibuat
+            ->orderByRaw("CASE status WHEN 'muat' THEN 0 WHEN 'dalam_perjalanan' THEN 0 WHEN 'menuju_pabrik' THEN 0 WHEN 'tiba' THEN 0 WHEN 'menunggu' THEN 1 ELSE 2 END")
             ->orderByDesc('tanggal_kirim')
             ->orderByDesc('id')
             ->first();
@@ -168,9 +171,13 @@ class SupirApiController extends Controller
 
     private function formatPesanan(Pengiriman $p): array
     {
+        $pabrik = \App\Support\Pabrik::data()['nama'];
         $keterangan = [
+            'menunggu'         => 'Pesanan baru. Status akan berubah otomatis saat truk mulai jalan.',
+            'menuju_pabrik'    => 'Truk sedang menuju '.$pabrik.' untuk muat barang.',
+            'muat'             => 'Truk sedang muat di '.$pabrik.'.',
             'dalam_perjalanan' => 'Pesanan sedang dalam perjalanan menuju tujuan.',
-            'menunggu'         => 'Pesanan menunggu keberangkatan.',
+            'tiba'             => 'Truk sudah tiba di tujuan. Tekan "Selesaikan Pesanan" setelah bongkar muat.',
             'tertunda'         => 'Pengiriman tertunda. Hubungi admin bila perlu.',
         ];
 
@@ -188,6 +195,7 @@ class SupirApiController extends Controller
             'muatan'            => $p->muatan,
             'tanggal_kirim'     => $p->tanggal_kirim?->format('Y-m-d'),
             'estimasi_tiba'     => $p->estimasi_tiba?->format('Y-m-d'),
+            'sudah_tiba'        => $p->status === 'tiba',
             'peta'              => PetaPengiriman::untuk($p),
         ];
     }

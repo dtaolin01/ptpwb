@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PabrikController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PesanController;
@@ -70,6 +71,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/{pelanggan}', 'update')->name('pelanggan.update');
         Route::delete('/{pelanggan}', 'destroy')->name('pelanggan.destroy');
     });
+
+    // Lokasi pabrik (tempat muat) + radius deteksi otomatis
+    Route::get('/pabrik', [PabrikController::class, 'edit'])->name('pabrik');
+    Route::put('/pabrik', [PabrikController::class, 'update'])->name('pabrik.update');
 
     // Pesan masuk dari form halaman Contact
     Route::controller(PesanController::class)->prefix('pesan')->group(function () {

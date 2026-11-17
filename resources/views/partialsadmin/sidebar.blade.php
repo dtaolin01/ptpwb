@@ -5,6 +5,7 @@
         ['Tracking',      'trackingAdmin', 'fa-location-dot', ['trackingAdmin', 'trackingAdmin.*']],
         ['Truck & Supir', 'truck',         'fa-truck',        ['truck', 'truck.*', 'supir', 'supir.*']],
         ['Pelanggan',     'pelanggan',     'fa-users',        ['pelanggan', 'pelanggan.*']],
+        ['Lokasi Pabrik', 'pabrik',        'fa-industry',     ['pabrik', 'pabrik.*']],
         ['Pesan Masuk',   'pesan',         'fa-envelope',     ['pesan', 'pesan.*']],
     ];
 

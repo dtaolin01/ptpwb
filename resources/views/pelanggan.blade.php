@@ -38,7 +38,12 @@
                         <td class="px-4 py-5 font-bold">{{ $p['nama'] }}</td>
                         <td class="px-4 py-5">{{ $p['kontak'] }}</td>
                         <td class="px-4 py-5 text-xs text-pwb-blue">{{ $p['email'] }}</td>
-                        <td class="px-4 py-5 text-xs">{{ $p['alamat'] }}</td>
+                        <td class="px-4 py-5 text-xs">
+                            {{ $p['alamat'] }}
+                            @unless ($p['lokasi'])
+                                <span class="mt-1 block font-bold text-red-600"><i class="fa-solid fa-location-dot mr-1"></i>Titik lokasi belum ada</span>
+                            @endunless
+                        </td>
                         <td class="px-4 py-5">@include('partialsadmin.aksi', ['edit' => $p['edit'], 'hapus' => $p['hapus'], 'nama' => $p['nama']])</td>
                     </tr>
                 @empty

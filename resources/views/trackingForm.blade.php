@@ -66,13 +66,13 @@
 
                 <div>
                     <label for="asal" class="{{ $label }}">Asal</label>
-                    <input id="asal" name="asal" value="{{ $v('asal') }}" placeholder="Contoh: Samarinda" class="{{ $input }}">
+                    <input id="asal" name="asal" value="{{ $v('asal') }}" placeholder="Kosongkan = otomatis dari posisi truk" class="{{ $input }}">
                     {!! $err('asal') !!}
                 </div>
 
                 <div>
                     <label for="tujuan" class="{{ $label }}">Tujuan</label>
-                    <input id="tujuan" name="tujuan" value="{{ $v('tujuan') }}" placeholder="Contoh: Balikpapan" class="{{ $input }}">
+                    <input id="tujuan" name="tujuan" value="{{ $v('tujuan') }}" placeholder="Kosongkan = otomatis dari alamat pelanggan" class="{{ $input }}">
                     {!! $err('tujuan') !!}
                 </div>
 
@@ -110,8 +110,10 @@
         <div class="rounded-xl border border-pwb-line bg-white p-6">
             <h2 class="font-bold text-pwb-navy"><i class="fa-solid fa-location-dot mr-2"></i>Titik di Peta</h2>
             <p class="mt-1 text-xs text-slate-500">
-                Pilih titik yang mau diatur, lalu klik lokasinya di peta atau cari nama tempat.
-                Kalau titik Asal/Tujuan dikosongkan, sistem memakai lokasi kota dari kolom Asal/Tujuan (jika dikenali).
+                Boleh dikosongkan, sistem mengisi otomatis: <b>Asal</b> = posisi truk saat ini (dari aplikasi supir),
+                <b>Tujuan</b> = lokasi perusahaan pelanggan, <b>Posisi Truk</b> = lokasi HP supir tiap 2 jam.
+                Status perjalanan (menuju pabrik → muat → pengiriman → tiba) juga berubah sendiri.
+                Klik peta atau cari nama tempat hanya kalau ingin mengubah titiknya.
             </p>
 
             <div class="mt-4 flex flex-wrap items-center gap-2" id="pilih-titik">

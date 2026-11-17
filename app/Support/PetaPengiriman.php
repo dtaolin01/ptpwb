@@ -26,10 +26,27 @@ class PetaPengiriman
             ];
         }
 
+        // Pabrik (tempat muat) di antara asal dan tujuan
+        $pabrik = Pabrik::data();
+        if ($pabrik['lat'] !== null && $pabrik['lng'] !== null) {
+            $catatan = match (true) {
+                $p->waktu_keluar_pabrik !== null => 'Selesai muat '.$p->waktu_keluar_pabrik->locale('id')->translatedFormat('d M Y, H.i'),
+                $p->waktu_tiba_pabrik !== null   => 'Tiba '.$p->waktu_tiba_pabrik->locale('id')->translatedFormat('d M Y, H.i'),
+                default                          => 'Tempat muat barang',
+            };
+            $pins[] = [
+                'type' => 'stop',
+                'name' => $pabrik['nama'],
+                'note' => $catatan,
+                'lat'  => $pabrik['lat'],
+                'lng'  => $pabrik['lng'],
+            ];
+        }
+
         if ($p->tujuan_lat !== null && $p->tujuan_lng !== null) {
             $pins[] = [
                 'type' => 'destination',
-                'name' => 'Tujuan: '.$p->tujuan,
+                'name' => 'Tujuan: '.($p->pelanggan?->nama ? $p->pelanggan->nama.' — ' : '').$p->tujuan,
                 'note' => $p->estimasi_tiba ? 'Estimasi tiba '.$p->estimasi_tiba->locale('id')->translatedFormat('d M Y') : null,
                 'lat'  => (float) $p->tujuan_lat,
                 'lng'  => (float) $p->tujuan_lng,

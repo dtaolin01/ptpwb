@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Pelanggan;
 use App\Models\Pengiriman;
 use App\Models\Truck;
+use App\Support\Geocoder;
 use App\Support\Kota;
 use App\Support\PetaPengiriman;
+use App\Support\ProgresPengiriman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -86,13 +88,13 @@ class TrackingAdminController extends Controller
             'tanggal_kirim' => today(),
             'estimasi_tiba' => today()->addDay(),
             'status'        => 'menunggu',
-            'asal'          => 'Samarinda',
         ]);
 
+        // Langkah standar; tahap berikutnya dicentang otomatis dari lokasi HP supir
         $events = collect(Pengiriman::LANGKAH_STANDAR)->map(fn ($judul, $i) => [
             'judul'   => $judul,
             'waktu'   => $i === 0 ? now()->format('Y-m-d\TH:i') : '',
-            'lokasi'  => $i === 0 ? 'Samarinda' : '',
+            'lokasi'  => '',
             'selesai' => $i === 0,
         ])->all();
 
@@ -179,7 +181,7 @@ class TrackingAdminController extends Controller
             'pelanggan_id'     => ['required', 'exists:pelanggan,id'],
             'truck_id'         => ['nullable', 'exists:trucks,id'],
             'asal'             => ['nullable', 'string', 'max:150'],
-            'tujuan'           => ['required', 'string', 'max:150'],
+            'tujuan'           => ['nullable', 'string', 'max:150'],
             'muatan'           => ['required', 'string', 'max:150'],
             'tanggal_kirim'    => ['required', 'date'],
             'estimasi_tiba'    => ['nullable', 'date', 'after_or_equal:tanggal_kirim'],
@@ -190,7 +192,7 @@ class TrackingAdminController extends Controller
             'tujuan_lng'       => $koordinat(-180, 180),
             'posisi_lat'       => $koordinat(-90, 90),
             'posisi_lng'       => $koordinat(-180, 180),
-            'events'           => ['array', 'max:20'],
+            'events'           => ['array', 'max:150'],
             'events.*.judul'   => ['required', 'string', 'max:150'],
             'events.*.waktu'   => ['nullable', 'date'],
             'events.*.lokasi'  => ['nullable', 'string', 'max:150'],
@@ -206,13 +208,36 @@ class TrackingAdminController extends Controller
     }
 
     /**
-     * Ambil kolom tabel pengiriman. Titik asal/tujuan yang kosong diisi otomatis dari nama kota.
+     * Ambil kolom tabel pengiriman. Yang dikosongkan admin diisi otomatis:
+     * - Tujuan : titik & kota perusahaan pelanggan (dicari dari alamatnya)
+     * - Asal   : posisi terakhir truk dari aplikasi supir (atau saat lokasi pertama masuk)
      */
     private function dataPengiriman(array $data): array
     {
-        foreach (['asal', 'tujuan'] as $titik) {
-            if (($data["{$titik}_lat"] ?? null) === null || ($data["{$titik}_lng"] ?? null) === null) {
-                [$data["{$titik}_lat"], $data["{$titik}_lng"]] = Kota::cari($data[$titik] ?? null) ?? [null, null];
+        $kosong = fn ($titik) => ($data["{$titik}_lat"] ?? null) === null || ($data["{$titik}_lng"] ?? null) === null;
+
+        // --- Tujuan dari lokasi perusahaan tujuan ---
+        $pelanggan = Pelanggan::find($data['pelanggan_id']);
+        if ($pelanggan && ! $pelanggan->titik() && $pelanggan->alamat) {
+            PelangganController::isiLokasi($pelanggan);
+        }
+        if ($kosong('tujuan')) {
+            [$data['tujuan_lat'], $data['tujuan_lng']] = $pelanggan?->titik() ?? Kota::cari($data['tujuan'] ?? null) ?? [null, null];
+        }
+        if (blank($data['tujuan'] ?? null)) {
+            $data['tujuan'] = mb_substr($pelanggan?->kota ?: ($pelanggan?->alamat ?: '-'), 0, 150);
+        }
+
+        // --- Asal dari posisi truk saat ini ---
+        if ($kosong('asal')) {
+            if ($pos = ProgresPengiriman::posisiTerakhirTruk($data['truck_id'] ?? null)) {
+                [$data['asal_lat'], $data['asal_lng']] = [$pos[0], $pos[1]];
+                if (blank($data['asal'] ?? null)) {
+                    $data['asal'] = Geocoder::namaDaerah($pos[0], $pos[1]) ?? 'Posisi truk';
+                }
+            } else {
+                // Belum ada lokasi truk: diisi otomatis saat aplikasi supir mengirim lokasi pertama
+                [$data['asal_lat'], $data['asal_lng']] = Kota::cari($data['asal'] ?? null) ?? [null, null];
             }
         }
 
