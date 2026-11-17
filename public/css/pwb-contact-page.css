@@ -23,6 +23,7 @@
    membuatnya menimpa navbar (absolute/fixed tanpa z-index).
    padding-top diperbesar supaya teks tidak ketabrak navbar. */
 .contact-hero {
+    font-family: 'Inter', Arial, sans-serif;   /* sebelumnya tidak diatur → teks hero tampil serif */
     min-height: 540px;
     display: flex;
     align-items: center;

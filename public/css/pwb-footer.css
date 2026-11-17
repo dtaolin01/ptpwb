@@ -203,6 +203,10 @@
 
 @media (max-width: 600px) {
     .pwb-footer-grid { grid-template-columns: 1fr; }
+    .pwb-footer-grid > * { min-width: 0; }               /* isi kolom tidak boleh melebarkan layar */
+    .pwb-footer-brand { gap: 12px; }
+    .pwb-footer-brand-title { font-size: 20px; line-height: 1.05; }
+    .pwb-footer-brand-sub { font-size: 16px; }
     .pwb-footer-form { max-width: none; }
     .pwb-footer-line { margin-right: 0; }
     .pwb-footer-stripes { opacity: .35; }

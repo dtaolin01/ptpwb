@@ -315,4 +315,22 @@
     .services-page .services-hero-text {
         max-width: 100%;
     }
+
+    /* Hero di HP: teks di atas, gambar armada di bawah (gambar lebar terlalu pendek untuk ditimpa teks) */
+    .services-page .services-hero {
+        margin-top: 0;
+        display: flex;
+        flex-direction: column;
+        background: #eef4fb;
+    }
+
+    .services-page .services-hero-content {
+        position: static;
+        transform: none;
+        padding: 32px 20px 24px;
+    }
+
+    .services-page .services-image {
+        order: 2;
+    }
 }

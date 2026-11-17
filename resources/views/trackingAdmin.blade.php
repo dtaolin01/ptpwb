@@ -30,11 +30,11 @@
     <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
         {{-- Detail pengiriman --}}
         <div class="rounded-xl border border-pwb-line bg-white p-5">
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="flex items-center gap-3 font-bold text-pwb-navy">
                     <i class="fa-solid fa-cube text-lg"></i> Detail Pengiriman
                 </h2>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <x-badge :warna="$detail['warna']">{{ $detail['status'] }}</x-badge>
                     <a href="{{ route('trackingAdmin.edit', $pengiriman) }}"
                        class="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800">
@@ -97,7 +97,7 @@
 
     {{-- Peta: sama dengan halaman Tracking publik (Leaflet + rute jalan) --}}
     <div class="mt-5 rounded-xl border border-pwb-line bg-white p-5">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="flex items-center gap-3 font-bold text-pwb-navy">
                 <i class="fa-solid fa-location-dot"></i> Lokasi Terakhir
             </h2>
