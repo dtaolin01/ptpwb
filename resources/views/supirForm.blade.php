@@ -24,7 +24,7 @@
             </div>
 
             <div>
-                <label for="telepon" class="{{ $label }}">Telepon (opsional)</label>
+                <label for="telepon" class="{{ $label }}">Telepon (dipakai untuk login aplikasi supir)</label>
                 <input id="telepon" name="telepon" value="{{ old('telepon', $supir->telepon) }}" placeholder="0812xxxxxxxx" class="{{ $input }}">
                 @error('telepon') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
