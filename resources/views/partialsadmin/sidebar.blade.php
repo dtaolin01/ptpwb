@@ -6,6 +6,7 @@
         ['Truck & Supir', 'truck',         'fa-truck',        ['truck', 'truck.*', 'supir', 'supir.*']],
         ['Pelanggan',     'pelanggan',     'fa-users',        ['pelanggan', 'pelanggan.*']],
         ['Lokasi Pabrik', 'pabrik',        'fa-industry',     ['pabrik', 'pabrik.*']],
+        ['Checker',       'checker',       'fa-user-check',   ['checker', 'checker.*']],
         ['Pesan Masuk',   'pesan',         'fa-envelope',     ['pesan', 'pesan.*']],
     ];
 
