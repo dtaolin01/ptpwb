@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Shipment;
+use App\Models\Pengiriman;
+use App\Support\PetaPengiriman;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 class TrackingController extends Controller
 {
+    /**
+     * Halaman publik /tracking. Data diambil dari tabel pengiriman + tracking_events,
+     * jadi perubahan dari admin (menu Tracking) langsung tampil di sini.
+     */
     public function index(Request $request)
     {
         $resi = strtoupper(trim((string) $request->query('resi', '')));
@@ -17,8 +20,8 @@ class TrackingController extends Controller
         $notFound = false;
 
         if ($resi !== '') {
-            $found = Shipment::with(['steps', 'details', 'locations'])
-                ->where('resi', $resi)
+            $found = Pengiriman::with(['pelanggan', 'truck', 'events'])
+                ->where('no_resi', $resi)
                 ->first();
 
             if ($found) {
@@ -39,131 +42,67 @@ class TrackingController extends Controller
     /**
      * Mengubah data dari database menjadi bentuk yang dibaca oleh tampilan.
      */
-    private function buildShipment(Shipment $found): array
+    private function buildShipment(Pengiriman $p): array
     {
-        [$etaText, $etaNote] = $this->buildEta($found);
+        [$etaText, $etaNote] = $this->buildEta($p);
 
-        // Status bertahap
-        $steps = $found->steps->map(fn ($step) => [
-            'label' => $step->label,
-            'date'  => $step->step_date
-                ? $step->step_date->copy()->locale('id')->translatedFormat('d M Y')
-                : '',
-            'done'  => (bool) $step->done,
+        // Warna badge admin -> warna badge halaman publik
+        $warna = ['amber' => 'yellow'][$p->status_warna] ?? $p->status_warna;
+
+        $steps = $p->events->map(fn ($e) => [
+            'label' => $e->judul,
+            'date'  => $e->waktu ? $e->waktu->copy()->locale('id')->translatedFormat('d M Y') : '',
+            'done'  => (bool) $e->selesai,
         ])->all();
 
-        // Detail pengiriman, dikelompokkan per kolom
-        $details = $found->details
-            ->groupBy('column_no')
-            ->sortKeys()
-            ->map(fn ($rows) => $rows->map(fn ($row) => [$row->label, $row->value])->all())
-            ->values()
-            ->all();
-
-        // Peta: pin pengiriman
-        $pins = $found->locations
-            ->where('type', '!=', 'truck')
-            ->map(fn ($loc) => [
-                'type' => $loc->type,
-                'name' => $loc->name,
-                'note' => $loc->note,
-                'lat'  => (float) $loc->lat,
-                'lng'  => (float) $loc->lng,
-            ])->values()->all();
-
-        // Peta: lokasi unit truk
-        $trucks = $found->locations
-            ->where('type', 'truck')
-            ->map(fn ($loc) => [
-                'name'       => $loc->name,
-                'lat'        => (float) $loc->lat,
-                'lng'        => (float) $loc->lng,
-                'icon'       => $loc->icon,
-                'updated_at' => $loc->recorded_at
-                    ? $loc->recorded_at->copy()->locale('id')->translatedFormat('d M Y, H.i T')
-                    : null,
-            ])->values()->all();
+        $details = [
+            [
+                ['Pelanggan', $p->pelanggan?->nama ?? '-'],
+                ['Muatan', $p->muatan],
+            ],
+            [
+                ['Asal', $p->asal ?: '-'],
+                ['Tujuan', $p->tujuan],
+            ],
+            [
+                ['Armada', $p->truck ? 'Truk '.$p->truck->jenis.' '.$p->truck->plat : 'Belum ditentukan'],
+                ['Tanggal Kirim', $p->tanggal_kirim?->locale('id')->translatedFormat('d M Y') ?? '-'],
+            ],
+        ];
 
         return [
-            'resi'         => $found->resi,
-            'status_label' => $found->status_label,
-            'status_color' => $found->status_color ?: 'green',
+            'resi'         => $p->no_resi,
+            'status_label' => $p->status_label,
+            'status_color' => $warna,
             'eta_text'     => $etaText,
             'eta_note'     => $etaNote,
             'steps'        => $steps,
             'details'      => $details,
-            'map'          => [
-                'pins'   => $pins,
-                'trucks' => $trucks,
-                'route'  => $this->buildRoute($pins),
-            ],
+            'map'          => PetaPengiriman::untuk($p),
         ];
     }
 
     /**
      * Mengembalikan [tanggal estimasi tiba, catatan "X Hari Lagi"].
      */
-    private function buildEta(Shipment $found): array
+    private function buildEta(Pengiriman $p): array
     {
-        if (!$found->eta_date) {
-            return [null, $found->eta_note];
+        if (! $p->estimasi_tiba) {
+            return [null, null];
         }
 
-        $eta = $found->eta_date->copy()->locale('id');
-        $etaText = $eta->translatedFormat('d F Y');
-        $etaNote = $found->eta_note;
+        $eta = $p->estimasi_tiba->copy()->locale('id');
 
-        if ($etaNote === null || $etaNote === '') {
-            $days = (int) Carbon::today()->diffInDays($eta->copy()->startOfDay(), false);
-
-            $etaNote = $days > 0
-                ? $days . ' Hari Lagi'
-                : ($days === 0 ? 'Hari Ini' : 'Terlambat ' . abs($days) . ' Hari');
+        if ($p->status === 'terkirim') {
+            return [$eta->translatedFormat('d F Y'), 'Sudah Tiba'];
         }
 
-        return [$etaText, $etaNote];
-    }
+        $days = (int) Carbon::today()->diffInDays($eta->copy()->startOfDay(), false);
 
-    /**
-     * Menghitung rute yang mengikuti jalan: titik muat -> titik singgah -> tujuan.
-     * Hasilnya disimpan di cache 30 hari. Mengembalikan null jika gagal
-     * (peta lalu memakai garis lurus sebagai cadangan).
-     */
-    private function buildRoute(array $pins): ?array
-    {
-        $order = ['origin' => 0, 'stop' => 1, 'destination' => 2];
+        $note = $days > 0
+            ? $days.' Hari Lagi'
+            : ($days === 0 ? 'Hari Ini' : 'Terlambat '.abs($days).' Hari');
 
-        $points = collect($pins)
-            ->sortBy(fn ($pin) => $order[$pin['type']] ?? 1)
-            ->values();
-
-        if ($points->count() < 2) {
-            return null;
-        }
-
-        // OSRM memakai urutan longitude,latitude
-        $coords = $points
-            ->map(fn ($pin) => number_format($pin['lng'], 6, '.', '') . ',' . number_format($pin['lat'], 6, '.', ''))
-            ->implode(';');
-
-        return Cache::remember('tracking_route_' . md5($coords), now()->addDays(30), function () use ($coords) {
-            try {
-                $response = Http::timeout(8)->get('https://router.project-osrm.org/route/v1/driving/' . $coords, [
-                    'overview'   => 'full',
-                    'geometries' => 'geojson',
-                ]);
-
-                if ($response->successful() && $response->json('code') === 'Ok') {
-                    // GeoJSON memakai [lng, lat], Leaflet memakai [lat, lng]
-                    return collect($response->json('routes.0.geometry.coordinates', []))
-                        ->map(fn ($c) => [round($c[1], 5), round($c[0], 5)])
-                        ->all();
-                }
-            } catch (\Throwable $e) {
-                // Gagal (offline atau server rute sibuk): peta memakai garis lurus
-            }
-
-            return null;
-        });
+        return [$eta->translatedFormat('d F Y'), $note];
     }
 }

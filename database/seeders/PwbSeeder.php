@@ -7,6 +7,7 @@ use App\Models\Pengiriman;
 use App\Models\Supir;
 use App\Models\TrackingEvent;
 use App\Models\Truck;
+use App\Support\Kota;
 use Illuminate\Database\Seeder;
 
 class PwbSeeder extends Seeder
@@ -97,6 +98,19 @@ class PwbSeeder extends Seeder
             }
 
             $kota = $tujuan[array_rand($tujuan)];
+            $titikAsal = Kota::cari('Jakarta');
+            $titikTujuan = Kota::cari($kota);
+
+            // Truk yang sedang jalan: posisi di antara asal dan tujuan
+            $posisi = null;
+            if ($status === 'dalam_perjalanan' || $status === 'tertunda') {
+                $t = rand(35, 70) / 100;
+                $posisi = [
+                    $titikAsal[0] + ($titikTujuan[0] - $titikAsal[0]) * $t,
+                    $titikAsal[1] + ($titikTujuan[1] - $titikAsal[1]) * $t,
+                ];
+            }
+
             $p = Pengiriman::forceCreate([
                 'no_resi'       => 'PWB-'.$key.'-'.str_pad((string) $nomorPerHari[$key], 4, '0', STR_PAD_LEFT),
                 'pelanggan_id'  => $pelanggan[array_rand($pelanggan)]->id,
@@ -106,6 +120,14 @@ class PwbSeeder extends Seeder
                 'tanggal_kirim' => $tanggal,
                 'estimasi_tiba' => $tanggal->copy()->addDay(),
                 'status'        => $status,
+                'asal'          => 'Jakarta',
+                'asal_lat'      => $titikAsal[0],
+                'asal_lng'      => $titikAsal[1],
+                'tujuan_lat'    => $titikTujuan[0],
+                'tujuan_lng'    => $titikTujuan[1],
+                'posisi_lat'    => $posisi[0] ?? null,
+                'posisi_lng'    => $posisi[1] ?? null,
+                'posisi_update' => $posisi ? now()->subMinutes(rand(10, 110)) : null,
                 'created_at'    => $tanggal,
                 'updated_at'    => $tanggal,
             ]);

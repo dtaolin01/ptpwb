@@ -13,11 +13,14 @@ class Pengiriman extends Model
     protected $fillable = [
         'no_resi', 'pelanggan_id', 'truck_id', 'tujuan', 'muatan',
         'tanggal_kirim', 'estimasi_tiba', 'status',
+        'asal', 'asal_lat', 'asal_lng', 'tujuan_lat', 'tujuan_lng',
+        'posisi_lat', 'posisi_lng', 'posisi_update',
     ];
 
     protected $casts = [
         'tanggal_kirim' => 'date',
         'estimasi_tiba' => 'date',
+        'posisi_update' => 'datetime',
     ];
 
     // status => [label, warna badge]
@@ -46,6 +49,23 @@ class Pengiriman extends Model
     public function getStatusLabelAttribute(): string
     {
         return self::STATUS[$this->status][0] ?? ucfirst($this->status);
+    }
+
+    /**
+     * Langkah standar untuk pengiriman baru.
+     */
+    public const LANGKAH_STANDAR = ['Pengiriman Diterima', 'Dalam Perjalanan', 'Menuju Tujuan', 'Tiba di Tujuan'];
+
+    /**
+     * Buat nomor resi berikutnya: PWB-YYYYMMDD-0001.
+     */
+    public static function resiBaru(?\DateTimeInterface $tanggal = null): string
+    {
+        $prefix = 'PWB-'.($tanggal ? $tanggal->format('Ymd') : now()->format('Ymd')).'-';
+        $terakhir = static::where('no_resi', 'like', $prefix.'%')->orderByDesc('no_resi')->value('no_resi');
+        $nomor = $terakhir ? ((int) substr($terakhir, -4)) + 1 : 1;
+
+        return $prefix.str_pad((string) $nomor, 4, '0', STR_PAD_LEFT);
     }
 
     public function getStatusWarnaAttribute(): string

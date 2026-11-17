@@ -5,6 +5,7 @@
 @push('styles')
 @if ($shipment)
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<link rel="stylesheet" href="{{ asset('css/pwb-tracking-map.css') }}?v={{ filemtime(public_path('css/pwb-tracking-map.css')) }}">
 @endif
 <link rel="stylesheet" href="{{ asset('css/pwb-tracking-page.css') }}?v={{ filemtime(public_path('css/pwb-tracking-page.css')) }}">
 @endpush
@@ -39,7 +40,7 @@
         <form class="pwb-trk-search" action="{{ route('tracking') }}#lacak" method="GET">
             <label class="pwb-trk-field">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/></svg>
-                <input type="text" name="resi" value="{{ $resi }}" placeholder="Masukkan nomer resi / nomer pelanggan" autocomplete="off" required>
+                <input type="text" name="resi" value="{{ $resi }}" placeholder="Masukkan nomor resi, contoh: PWB-20261117-0001" autocomplete="off" required>
             </label>
 
             <button type="submit" class="pwb-trk-btn">

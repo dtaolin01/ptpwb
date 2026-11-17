@@ -2,7 +2,7 @@
     // [label, nama route (untuk link), ikon FontAwesome, pola route yang dianggap "aktif"]
     $menus = [
         ['Dashboard',     'dashboard',     'fa-house',        ['dashboard']],
-        ['Tracking',      'trackingAdmin', 'fa-location-dot', ['trackingAdmin']],
+        ['Tracking',      'trackingAdmin', 'fa-location-dot', ['trackingAdmin', 'trackingAdmin.*']],
         ['Truck & Supir', 'truck',         'fa-truck',        ['truck', 'truck.*', 'supir', 'supir.*']],
         ['Pelanggan',     'pelanggan',     'fa-users',        ['pelanggan', 'pelanggan.*']],
         ['Pesan Masuk',   'pesan',         'fa-envelope',     ['pesan', 'pesan.*']],

@@ -32,7 +32,16 @@ Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
 */
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/trackingAdmin', [TrackingAdminController::class, 'index'])->name('trackingAdmin');
+
+    // Tracking pengiriman (data yang sama dipakai halaman publik /tracking)
+    Route::controller(TrackingAdminController::class)->prefix('trackingAdmin')->group(function () {
+        Route::get('/', 'index')->name('trackingAdmin');
+        Route::get('/create', 'create')->name('trackingAdmin.create');
+        Route::post('/', 'store')->name('trackingAdmin.store');
+        Route::get('/{pengiriman}/edit', 'edit')->name('trackingAdmin.edit');
+        Route::put('/{pengiriman}', 'update')->name('trackingAdmin.update');
+        Route::delete('/{pengiriman}', 'destroy')->name('trackingAdmin.destroy');
+    });
 
     // Truck (halaman "Truck & Supir"). Nama route index tetap 'truck' supaya sidebar tidak berubah.
     Route::controller(TruckController::class)->prefix('truck-supir')->group(function () {

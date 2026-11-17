@@ -2,12 +2,24 @@
 
 @section('page_title', 'Tracking')
 @section('title', 'Tracking Pengiriman')
-@section('subtitle', 'Lacak status pengiriman Anda secara real-time')
+@section('subtitle', 'Lacak dan perbarui status pengiriman. Perubahan langsung tampil di halaman Tracking publik.')
+
+@section('banner_action')
+    <a href="{{ route('trackingAdmin.create') }}" class="inline-flex items-center gap-3 rounded-lg bg-pwb-navy px-5 py-3 text-sm font-bold text-white hover:bg-slate-900">
+        <i class="fa-solid fa-plus"></i> Tambah Pengiriman
+    </a>
+@endsection
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="{{ asset('css/pwb-tracking-map.css') }}?v={{ filemtime(public_path('css/pwb-tracking-map.css')) }}">
+    <style>.pwb-trk-map { height: 420px; }</style>
+@endpush
 
 @section('content')
     {{-- Pencarian resi --}}
     <form action="{{ route('trackingAdmin') }}" method="GET" class="flex overflow-hidden rounded-lg border border-pwb-line bg-white">
-        <input type="text" name="resi" value="{{ $resi }}" placeholder="Masukkan nomor resi..."
+        <input type="text" name="resi" value="{{ $resi }}" placeholder="Masukkan nomor resi, contoh: PWB-20261117-0001"
                class="flex-1 px-4 py-3 text-sm outline-none placeholder:text-slate-400">
         <button type="submit" class="bg-pwb-blue px-6 text-white hover:bg-blue-700">
             <i class="fa-solid fa-magnifying-glass"></i>
@@ -18,17 +30,24 @@
     <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
         {{-- Detail pengiriman --}}
         <div class="rounded-xl border border-pwb-line bg-white p-5">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3">
                 <h2 class="flex items-center gap-3 font-bold text-pwb-navy">
                     <i class="fa-solid fa-cube text-lg"></i> Detail Pengiriman
                 </h2>
-                <x-badge :warna="$detail['warna']">{{ $detail['status'] }}</x-badge>
+                <div class="flex items-center gap-2">
+                    <x-badge :warna="$detail['warna']">{{ $detail['status'] }}</x-badge>
+                    <a href="{{ route('trackingAdmin.edit', $pengiriman) }}"
+                       class="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800">
+                        <i class="fa-solid fa-pen"></i> Ubah
+                    </a>
+                </div>
             </div>
 
             <dl class="mt-5 space-y-4 text-sm">
                 @foreach ([
                     'No. Resi'      => $detail['no_resi'],
                     'Pelanggan'     => $detail['pelanggan'],
+                    'Asal'          => $detail['asal'],
                     'Tujuan'        => $detail['tujuan'],
                     'Jenis Muatan'  => $detail['muatan'],
                     'Armada'        => $detail['armada'],
@@ -40,6 +59,11 @@
                     </div>
                 @endforeach
             </dl>
+
+            <a href="{{ route('tracking', ['resi' => $detail['no_resi']]) }}#lacak" target="_blank" rel="noopener"
+               class="mt-5 inline-flex items-center gap-2 text-xs font-bold text-pwb-blue hover:underline">
+                Lihat di halaman Tracking publik <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
         </div>
 
         {{-- Status perjalanan --}}
@@ -47,7 +71,7 @@
             <h2 class="font-bold text-pwb-navy">Status Perjalanan</h2>
 
             <ol class="mt-5">
-                @foreach ($perjalanan as $step)
+                @forelse ($perjalanan as $step)
                     @php $selesai = $step['state'] === 'selesai'; @endphp
                     <li class="relative flex gap-4 pb-6 last:pb-0">
                         @unless ($loop->last)
@@ -64,12 +88,14 @@
                             @endif
                         </div>
                     </li>
-                @endforeach
+                @empty
+                    <li class="text-sm text-slate-500">Belum ada langkah perjalanan.</li>
+                @endforelse
             </ol>
         </div>
     </div>
 
-    {{-- Peta lokasi terakhir (gambar statis; nanti bisa diganti Leaflet / Google Maps) --}}
+    {{-- Peta: sama dengan halaman Tracking publik (Leaflet + rute jalan) --}}
     <div class="mt-5 rounded-xl border border-pwb-line bg-white p-5">
         <div class="flex items-center justify-between">
             <h2 class="flex items-center gap-3 font-bold text-pwb-navy">
@@ -77,11 +103,83 @@
             </h2>
             <span class="text-xs text-slate-500">Update: {{ $updateTerakhir }}</span>
         </div>
-        <img src="{{ asset('images/map-rute.png') }}" alt="Peta rute Jakarta - Surabaya" class="mt-4 w-full rounded-lg">
+
+        @if (empty($peta['pins']) && empty($peta['trucks']))
+            <p class="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                Titik asal, tujuan, dan posisi truk belum diatur.
+                <a href="{{ route('trackingAdmin.edit', $pengiriman) }}" class="font-bold underline">Atur di halaman Ubah</a>.
+            </p>
+        @endif
+
+        <div id="pwb-trk-map" class="pwb-trk-map mt-4" data-map="{{ json_encode($peta) }}"></div>
     </div>
-    @else
+    @elseif ($resi !== '')
         <div class="mt-5 rounded-xl border border-pwb-line bg-white p-8 text-center text-sm text-slate-500">
             Nomor resi <span class="font-bold text-slate-800">{{ $resi }}</span> tidak ditemukan.
         </div>
     @endif
+
+    {{-- Daftar pengiriman --}}
+    <div class="mt-5 rounded-xl border border-pwb-line bg-white p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="font-bold text-pwb-navy">Semua Pengiriman</h2>
+
+            <form method="GET" action="{{ route('trackingAdmin') }}" class="flex items-center gap-2">
+                @if ($resi !== '') <input type="hidden" name="resi" value="{{ $resi }}"> @endif
+                <select name="status" onchange="this.form.submit()" class="rounded-lg border border-pwb-line px-3 py-2 text-xs">
+                    <option value="">Semua status</option>
+                    @foreach (\App\Models\Pengiriman::STATUS as $kode => [$nama])
+                        <option value="{{ $kode }}" @selected($status === $kode)>{{ $nama }}</option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+
+        <div class="mt-4 overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-100/80 text-xs font-bold text-pwb-navy">
+                    <tr>
+                        <th class="px-4 py-3">No. Resi</th>
+                        <th class="px-4 py-3">Pelanggan</th>
+                        <th class="px-4 py-3">Rute</th>
+                        <th class="px-4 py-3">Tgl Kirim</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-pwb-line">
+                    @forelse ($daftar as $p)
+                        <tr class="{{ $pengiriman && $pengiriman->id === $p->id ? 'bg-pwb-sky/40' : '' }}">
+                            <td class="px-4 py-4">
+                                <a href="{{ route('trackingAdmin', ['resi' => $p->no_resi, 'status' => $status ?: null, 'page' => $daftar->currentPage()]) }}"
+                                   class="font-bold text-pwb-blue hover:underline">{{ $p->no_resi }}</a>
+                            </td>
+                            <td class="px-4 py-4">{{ $p->pelanggan?->nama }}</td>
+                            <td class="px-4 py-4 text-xs">{{ $p->asal ?: '-' }} → {{ $p->tujuan }}</td>
+                            <td class="px-4 py-4 text-xs">{{ $p->tanggal_kirim?->format('d/m/Y') }}</td>
+                            <td class="px-4 py-4"><x-badge :warna="$p->status_warna">{{ $p->status_label }}</x-badge></td>
+                            <td class="px-4 py-4">
+                                @include('partialsadmin.aksi', [
+                                    'edit'  => route('trackingAdmin.edit', $p),
+                                    'hapus' => route('trackingAdmin.destroy', $p),
+                                    'nama'  => 'pengiriman '.$p->no_resi,
+                                ])
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">Belum ada pengiriman.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @include('partialsadmin.pagination', ['data' => $daftar])
+    </div>
 @endsection
+
+@push('scripts')
+    @if ($detail)
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+        <script src="{{ asset('js/pwb-tracking-map.js') }}?v={{ filemtime(public_path('js/pwb-tracking-map.js')) }}"></script>
+    @endif
+@endpush
