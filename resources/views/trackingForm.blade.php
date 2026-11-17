@@ -58,7 +58,7 @@
                     <select id="truck_id" name="truck_id" class="{{ $input }}">
                         <option value="">Belum ditentukan</option>
                         @foreach ($trucks as $t)
-                            <option value="{{ $t->id }}" @selected((string) $v('truck_id') === (string) $t->id)>{{ $t->plat }} ({{ $t->jenis }})</option>
+                            <option value="{{ $t->id }}" @selected((string) $v('truck_id') === (string) $t->id)>{{ $t->plat }} ({{ $t->jenis }}){{ $t->supir ? ' — '.$t->supir->nama : ' — belum ada supir' }}</option>
                         @endforeach
                     </select>
                     {!! $err('truck_id') !!}

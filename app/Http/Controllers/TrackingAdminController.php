@@ -164,7 +164,7 @@ class TrackingAdminController extends Controller
             'pengiriman' => $pengiriman,
             'events'     => old('events', $events),
             'pelanggan'  => Pelanggan::orderBy('nama')->get(['id', 'nama']),
-            'trucks'     => Truck::orderBy('plat')->get(['id', 'plat', 'jenis']),
+            'trucks'     => Truck::with('supir:id,nama')->orderBy('plat')->get(['id', 'plat', 'jenis', 'supir_id']),
         ]);
     }
 
