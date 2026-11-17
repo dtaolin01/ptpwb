@@ -1,0 +1,10 @@
+# Hosting (Hostinger) membuka folder ini sebagai public_html, padahal halaman Laravel
+# ada di folder public/. Semua permintaan diteruskan ke public/ supaya website tidak 403.
+# File ini disimpan di repo agar tidak hilang saat kode diambil ulang (git pull / Deploy).
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Jangan tampilkan daftar isi folder
+Options -Indexes
