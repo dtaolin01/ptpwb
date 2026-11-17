@@ -1,0 +1,140 @@
+/* ===== BANNER (HERO) ===== */
+.pwb-banner {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    aspect-ratio: 1920 / 732;         /* tinggi mengikuti rasio foto */
+    min-height: 640px;                /* batas minimum agar teks tetap muat */
+    overflow: hidden;
+    background-color: #1553b5;        /* hanya terlihat jika foto gagal dimuat */
+    color: #ffffff;
+}
+
+.pwb-banner-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.pwb-banner-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 1400px;
+    padding: 0 clamp(24px, 7.8vw, 150px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* ===== BREADCRUMB ===== */
+.pwb-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(14px, 1.05vw, 20px);
+    margin-bottom: 18px;
+}
+
+.pwb-breadcrumb-line {
+    width: 117px;
+    max-width: 14vw;
+    height: 3px;
+    background: #d32a26;
+}
+
+.pwb-breadcrumb-slash {
+    color: #d32a26;
+    margin: 0 12px;
+}
+
+/* ===== JUDUL ===== */
+.pwb-hero-title {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-weight: 700;
+    font-size: clamp(44px, 4.6vw, 88px);
+    line-height: .95;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    margin: 0 0 24px;
+}
+
+.pwb-hero-title span { display: block; }
+.pwb-hero-title .line-white  { color: #ffffff; }
+.pwb-hero-title .line-yellow { color: #f6c915; }
+
+/* ===== PARAGRAF ===== */
+.pwb-hero-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: clamp(16px, 1.4vw, 26px);
+    line-height: 1.55;
+    max-width: 640px;
+    margin: 0 0 40px;
+}
+
+/* ===== TOMBOL ===== */
+.pwb-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.pwb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(15px, 1.2vw, 22px);
+    text-decoration: none;
+    color: #ffffff;
+    transition: transform .15s ease, background-color .2s ease, opacity .2s ease;
+}
+
+.pwb-btn-red {
+    background: #d32a26;
+    padding: 18px 42px;
+    border-radius: 6px;
+}
+
+.pwb-btn-red:hover {
+    background: #b9211e;
+    transform: translateY(-2px);
+}
+
+.pwb-btn-text:hover {
+    opacity: .85;
+}
+
+.pwb-arrow {
+    width: 1.3em;
+    height: 1.3em;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
+    .pwb-banner {
+        min-height: 680px;
+    }
+
+    .pwb-banner-content {
+        padding: 0 24px;
+    }
+
+    .pwb-hero-actions {
+        gap: 24px;
+    }
+
+    .pwb-btn-red {
+        padding: 14px 28px;
+    }
+}

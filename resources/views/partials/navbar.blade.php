@@ -1,0 +1,24 @@
+<nav class="pwb-navbar">
+    <a href="{{ url('/') }}" class="pwb-brand">
+        <img src="{{ asset('images/pwb-logo.png') }}" alt="Logo PWB" class="pwb-logo">
+        <div class="pwb-text">
+            <span class="pwb-title">Putra Wijaya Berjaya</span>
+            <span class="pwb-subtitle">Logistics &amp; Distribution</span>
+        </div>
+    </a>
+
+    <input type="checkbox" id="pwb-toggle" class="pwb-toggle">
+    <label for="pwb-toggle" class="pwb-burger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </label>
+
+    <ul class="pwb-menu">
+        <li><a href="{{ route('home') }}#top" data-section="top" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a></li>
+        <li><a href="{{ route('home') }}#tentang" data-section="tentang">About</a></li>
+        <li><a href="{{ route('services') }}" class="{{ request()->routeIs('services') ? 'active' : '' }}">Services</a></li>
+        <li><a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">Contacts</a></li>
+        <li><a href="{{ route('tracking') }}" class="{{ request()->routeIs('tracking') ? 'active' : '' }}">Tracking</a></li>
+    </ul>
+</nav>
+
+
