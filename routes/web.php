@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\CheckerController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PabrikController;
@@ -70,6 +71,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/{pelanggan}/edit', 'edit')->name('pelanggan.edit');
         Route::put('/{pelanggan}', 'update')->name('pelanggan.update');
         Route::delete('/{pelanggan}', 'destroy')->name('pelanggan.destroy');
+    });
+
+    // Akun petugas pabrik untuk aplikasi PWB Checker
+    Route::controller(CheckerController::class)->prefix('checker')->group(function () {
+        Route::get('/', 'index')->name('checker');
+        Route::get('/create', 'create')->name('checker.create');
+        Route::post('/', 'store')->name('checker.store');
+        Route::get('/{checker}/edit', 'edit')->name('checker.edit');
+        Route::put('/{checker}', 'update')->name('checker.update');
+        Route::delete('/{checker}', 'destroy')->name('checker.destroy');
     });
 
     // Lokasi pabrik (tempat muat) + radius deteksi otomatis

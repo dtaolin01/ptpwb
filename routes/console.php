@@ -37,6 +37,7 @@ Artisan::command('data:kosongkan {--force : Tanpa konfirmasi}', function () {
     $tabel = [
         'tracking_events' => 'Langkah perjalanan',
         'lokasi_truk'     => 'Riwayat lokasi truk',
+        'notifikasi_pabrik' => 'Notifikasi checker',
         'supir_tokens'    => 'Login aplikasi supir',
         'pengiriman'      => 'Tracking / pengiriman',
         'trucks'          => 'Truck',

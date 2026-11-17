@@ -7,6 +7,7 @@ use App\Models\LokasiTruk;
 use App\Models\Pengiriman;
 use App\Models\SupirToken;
 use App\Models\Truck;
+use App\Support\DeteksiPabrik;
 use App\Support\PetaPengiriman;
 use App\Support\ProgresPengiriman;
 use Illuminate\Http\Request;
@@ -98,6 +99,10 @@ class SupirApiController extends Controller
         }
 
         $interval = DB::transaction(function () use ($data, $truck, $p, $waktu) {
+            // Notifikasi untuk aplikasi Checker: truk mendekati / tiba di / keluar dari pabrik
+            // (dibandingkan dengan lokasi sebelumnya, jadi dipanggil sebelum lokasi baru disimpan)
+            DeteksiPabrik::periksa($truck->loadMissing('supir'), (float) $data['lat'], (float) $data['lng'], $waktu, $p);
+
             LokasiTruk::create([
                 'truck_id'      => $truck->id,
                 'pengiriman_id' => $p?->id,
@@ -109,9 +114,14 @@ class SupirApiController extends Controller
 
             // Posisi truk di peta + status perjalanan maju otomatis
             // (menuju pabrik → muat → pengiriman → tiba)
-            return $p
+            $interval = $p
                 ? ProgresPengiriman::proses($p, (float) $data['lat'], (float) $data['lng'], $waktu)
                 : ProgresPengiriman::INTERVAL_NORMAL;
+
+            // Dekat pabrik (dengan atau tanpa pesanan) → pantau tiap 15 menit untuk checker
+            return DeteksiPabrik::dekatPabrik((float) $data['lat'], (float) $data['lng'])
+                ? min($interval, ProgresPengiriman::INTERVAL_DEKAT)
+                : $interval;
         });
 
         $p?->refresh();
