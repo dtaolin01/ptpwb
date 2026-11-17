@@ -472,6 +472,11 @@
         flex-direction: column;
     }
 
+    /* Di susunan vertikal, flex: 1 membuat kolom resi kempis → pakai tinggi aslinya */
+    .pwb-trk-field {
+        flex: 0 0 auto;
+    }
+
     .pwb-trk-btn {
         width: 100%;
     }

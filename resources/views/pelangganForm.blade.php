@@ -50,7 +50,7 @@
                     </button>
                 </div>
                 <p id="lokasi-info" class="mb-2 mt-1 text-xs text-slate-500"></p>
-                <div id="peta-pelanggan" class="h-72 overflow-hidden rounded-lg border border-pwb-line"></div>
+                <div id="peta-pelanggan" class="relative z-0 h-72 overflow-hidden rounded-lg border border-pwb-line"></div>
                 <p class="mt-1 text-[11px] text-slate-500">Titik ini dipakai sebagai tujuan pengiriman dan untuk mendeteksi truk sudah tiba. Klik peta atau geser penanda kalau lokasinya kurang tepat.</p>
 
                 <input type="hidden" name="lat" id="lat" value="{{ old('lat', $pelanggan->lat) }}">

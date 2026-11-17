@@ -53,10 +53,10 @@
 
             <ul class="mt-4">
                 @foreach ($pengirimanTerbaru as $p)
-                    <li class="grid grid-cols-3 items-center py-4">
-                        <span class="text-sm">{{ $p['resi'] }}</span>
-                        <span><x-badge :warna="$p['warna']">{{ $p['status'] }}</x-badge></span>
-                        <span class="text-right text-sm">{{ $p['tanggal'] }}</span>
+                    <li class="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 sm:grid sm:grid-cols-3">
+                        <span class="whitespace-nowrap text-sm font-medium">{{ $p['resi'] }}</span>
+                        <span class="order-last w-full sm:order-none sm:w-auto"><x-badge :warna="$p['warna']">{{ $p['status'] }}</x-badge></span>
+                        <span class="ml-auto whitespace-nowrap text-right text-sm text-slate-500 sm:ml-0 sm:text-slate-800">{{ $p['tanggal'] }}</span>
                     </li>
                 @endforeach
             </ul>

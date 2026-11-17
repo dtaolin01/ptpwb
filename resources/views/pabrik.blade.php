@@ -36,7 +36,7 @@
             </div>
 
             <p class="mt-5 text-xs text-slate-500">Klik lokasi pabrik di peta (atau geser penandanya). Lingkaran = area yang dianggap "di dalam pabrik".</p>
-            <div id="peta-pabrik" class="mt-2 h-96 overflow-hidden rounded-lg border border-pwb-line"></div>
+            <div id="peta-pabrik" class="relative z-0 mt-2 h-72 overflow-hidden sm:h-96 rounded-lg border border-pwb-line"></div>
             <input type="hidden" name="lat" id="lat" value="{{ old('lat', $pabrik['lat']) }}">
             <input type="hidden" name="lng" id="lng" value="{{ old('lng', $pabrik['lng']) }}">
             <p id="titik-info" class="mt-2 text-xs text-slate-500"></p>

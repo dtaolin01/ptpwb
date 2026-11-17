@@ -6,6 +6,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PabrikController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PetaArmadaController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PesanController;
 use App\Http\Controllers\ServiceController;
@@ -36,6 +37,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Tracking pengiriman (data yang sama dipakai halaman publik /tracking)
+    // Peta semua truk (lokasi terakhir dari aplikasi supir)
+    Route::get('/peta-armada', [PetaArmadaController::class, 'index'])->name('petaArmada');
+    Route::get('/peta-armada/data', [PetaArmadaController::class, 'data'])->name('petaArmada.data');
+
     Route::controller(TrackingAdminController::class)->prefix('trackingAdmin')->group(function () {
         Route::get('/', 'index')->name('trackingAdmin');
         Route::get('/create', 'create')->name('trackingAdmin.create');
