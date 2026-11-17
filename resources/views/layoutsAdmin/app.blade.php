@@ -29,10 +29,19 @@
     <main class="min-w-0 flex-1">
         {{-- Banner atas: avatar admin + judul halaman --}}
         <header class="bg-pwb-sky px-8 pb-6 pt-4">
-            <div class="flex items-center justify-end gap-2 text-sm font-semibold text-pwb-navy">
-                <span class="h-8 w-8 rounded-full bg-slate-400"></span>
+            <div class="flex items-center justify-end gap-3 text-sm font-semibold text-pwb-navy">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-pwb-navy text-xs text-white">
+                    <i class="fa-solid fa-user"></i>
+                </span>
                 {{ auth()->user()?->username ?? auth()->user()?->email ?? 'Admin PWB' }}
-                <i class="fa-solid fa-chevron-down text-xs"></i>
+
+                {{-- Tombol keluar --}}
+                <form method="POST" action="{{ route('admin.logout') }}" onsubmit="return confirm('Keluar dari dashboard admin?')">
+                    @csrf
+                    <button type="submit" class="ml-2 inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50">
+                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                    </button>
+                </form>
             </div>
 
             <div class="mt-4 flex items-end justify-between">

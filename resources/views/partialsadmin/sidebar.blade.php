@@ -12,12 +12,12 @@
     $pesanBaru = \App\Models\ContactMessage::where('dibaca', false)->count();
 @endphp
 
-<aside class="relative flex min-h-screen w-64 shrink-0 flex-col overflow-hidden bg-pwb-navy text-white">
+<aside class="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-hidden bg-pwb-navy text-white">
     <div class="px-5 pt-8">
         <img src="{{ asset('images/logo-pwb.png') }}" alt="Putra Wijaya Berjaya" class="w-full">
     </div>
 
-    <nav class="mt-12 space-y-2 px-3">
+    <nav class="mt-12 min-h-0 flex-1 space-y-2 overflow-y-auto px-3">
         @foreach ($menus as [$label, $route, $ikon, $aktif])
             <a href="{{ route($route) }}"
                class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm {{ request()->routeIs(...$aktif) ? 'bg-pwb-blue font-bold' : 'font-medium hover:bg-white/10' }}">
@@ -30,7 +30,7 @@
         @endforeach
     </nav>
 
-    <form method="POST" action="{{ route('admin.logout') }}" class="relative z-10 mt-auto px-7 pb-8">
+    <form method="POST" action="{{ route('admin.logout') }}" onsubmit="return confirm('Keluar dari dashboard admin?')" class="relative z-10 px-7 pb-8 pt-4">
         @csrf
         <button type="submit" class="flex items-center gap-4 text-sm hover:text-white/80">
             <i class="fa-solid fa-right-from-bracket w-5 text-center text-base"></i> Logout
