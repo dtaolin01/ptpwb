@@ -7,6 +7,7 @@ use App\Models\Pengiriman;
 use App\Models\Truck;
 use App\Support\Geocoder;
 use App\Support\Kota;
+use App\Support\LaporanPengiriman;
 use App\Support\PetaPengiriman;
 use App\Support\ProgresPengiriman;
 use Illuminate\Http\Request;
@@ -154,6 +155,17 @@ class TrackingAdminController extends Controller
 
         return redirect()->route('trackingAdmin', ['resi' => $pengiriman->no_resi])
             ->with('success', "Data tracking {$pengiriman->no_resi} berhasil diperbarui.");
+    }
+
+    /**
+     * Laporan satu pengiriman (siap cetak / simpan PDF dari browser).
+     */
+    public function laporan(Pengiriman $pengiriman)
+    {
+        return view('laporanPengiriman', [
+            'p'   => $pengiriman,
+            'lap' => LaporanPengiriman::untuk($pengiriman),
+        ]);
     }
 
     public function destroy(Pengiriman $pengiriman)

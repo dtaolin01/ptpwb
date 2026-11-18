@@ -36,6 +36,10 @@
                 </h2>
                 <div class="flex flex-wrap items-center gap-2">
                     <x-badge :warna="$detail['warna']">{{ $detail['status'] }}</x-badge>
+                    <a href="{{ route('trackingAdmin.laporan', $pengiriman) }}" target="_blank"
+                       class="inline-flex items-center gap-2 rounded-lg {{ $pengiriman->status === 'terkirim' ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-500 hover:bg-slate-600' }} px-3 py-1.5 text-xs font-bold text-white">
+                        <i class="fa-solid fa-file-lines"></i> Laporan
+                    </a>
                     <a href="{{ route('trackingAdmin.edit', $pengiriman) }}"
                        class="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800">
                         <i class="fa-solid fa-pen"></i> Ubah
@@ -160,6 +164,12 @@
                             <td class="px-4 py-4 text-xs">{{ $p->tanggal_kirim?->format('d/m/Y') }}</td>
                             <td class="px-4 py-4"><x-badge :warna="$p->status_warna">{{ $p->status_label }}</x-badge></td>
                             <td class="px-4 py-4">
+                                @if ($p->status === 'terkirim')
+                                    <a href="{{ route('trackingAdmin.laporan', $p) }}" target="_blank" title="Laporan pengiriman"
+                                       class="mb-2 inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-bold text-white hover:bg-green-700">
+                                        <i class="fa-solid fa-file-lines"></i> Laporan
+                                    </a>
+                                @endif
                                 @include('partialsadmin.aksi', [
                                     'edit'  => route('trackingAdmin.edit', $p),
                                     'hapus' => route('trackingAdmin.destroy', $p),
