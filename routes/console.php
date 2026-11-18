@@ -69,3 +69,18 @@ Artisan::command('data:kosongkan {--force : Tanpa konfirmasi}', function () {
 
     $this->info('Selesai. Supir, Truck, Pelanggan, dan Tracking sekarang kosong.');
 })->purpose('Hapus semua data Supir, Truck, Pelanggan, dan Tracking');
+
+/*
+| Cadangan darurat dari SSH: setujui akun (mis. kalau akun pemilik belum disetujui).
+|   php artisan akun:setujui darrentaolin
+*/
+Artisan::command('akun:setujui {username}', function (string $username) {
+    $user = \App\Models\User::where('username', $username)->orWhere('email', $username)->first();
+    if (! $user) {
+        $this->error("Akun '{$username}' tidak ditemukan.");
+
+        return 1;
+    }
+    $user->update(['disetujui' => true, 'disetujui_at' => now()]);
+    $this->info("Akun {$user->label} disetujui.");
+})->purpose('Setujui akun admin dari terminal');

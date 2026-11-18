@@ -13,6 +13,8 @@ class User extends Authenticatable
         'email',
         'username',
         'password',
+        'disetujui',
+        'disetujui_at',
     ];
 
     protected $hidden = [
@@ -24,6 +26,22 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'disetujui' => 'boolean',
+            'disetujui_at' => 'datetime',
         ];
+    }
+
+    /** Pemilik website (config app.pemilik): satu-satunya yang bisa menyetujui akun baru. */
+    public function isPemilik(): bool
+    {
+        return $this->username !== null
+            && strcasecmp($this->username, (string) config('app.pemilik')) === 0
+            && $this->disetujui;
+    }
+
+    /** Nama yang ditampilkan: username, atau email kalau daftar memakai email. */
+    public function getLabelAttribute(): string
+    {
+        return $this->username ?: (string) $this->email;
     }
 }

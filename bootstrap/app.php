@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Belum login -> arahkan ke /admin, sudah login -> ke dashboard admin
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->redirectUsersTo(fn () => route('dashboard'));
+
+        $middleware->alias([
+            'disetujui' => \App\Http\Middleware\AkunDisetujui::class,
+            'pemilik'   => \App\Http\Middleware\HanyaPemilik::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
