@@ -20,9 +20,61 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Tabel di layar HP: tetap rapi, geser ke samping untuk melihat kolom lain */
+        .hp-isi { display: contents; }   /* laptop: tidak mengubah apa pun */
+
+        /* ===================== Tampilan HP (layar < 768px) ===================== */
         @media (max-width: 767px) {
-            .overflow-x-auto > table { min-width: 680px; }
+            /* Huruf lebih besar & mudah dibaca */
+            body { font-size: 16px; }
+            .text-\[10px\] { font-size: 12px !important; }
+            .text-\[11px\] { font-size: 13px !important; }
+            .text-xs { font-size: 13.5px; line-height: 1.4; }
+            .text-sm { font-size: 15.5px; line-height: 1.5; }
+            .text-base { font-size: 17px; }
+
+            /* Kolom isian 16px: HP tidak zoom otomatis saat mengetik */
+            input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; }
+
+            /* Tombol ikon (ubah/hapus) lebih besar supaya mudah diketuk */
+            .h-8.w-8 { height: 2.5rem; width: 2.5rem; }
+
+            /* Tabel → kartu: setiap baris jadi satu kartu, label kolom di kiri */
+            table.tabel-hp, table.tabel-hp tbody { display: block; width: 100%; min-width: 0 !important; }
+            table.tabel-hp thead { display: none; }
+            table.tabel-hp tbody > tr {
+                display: block; background: #fff; border: 1px solid #DCE3F0 !important;
+                border-radius: 14px; padding: 4px 16px; margin-bottom: 12px;
+                box-shadow: 0 1px 3px rgba(18, 40, 92, .06);
+            }
+            table.tabel-hp tbody > tr > td {
+                display: flex; align-items: center; justify-content: space-between; gap: 14px;
+                padding: 11px 0 !important; text-align: right; max-width: none !important;
+                border-bottom: 1px dashed #E5EAF3;
+            }
+            table.tabel-hp tbody > tr > td:last-child { border-bottom: 0; }
+            table.tabel-hp tbody > tr > td::before {
+                content: attr(data-label); flex-shrink: 0; max-width: 42%;
+                text-align: left; font-weight: 700; color: #12285C; font-size: 14px;
+            }
+            table.tabel-hp tbody > tr > td:not([data-label])::before,
+            table.tabel-hp tbody > tr > td[data-label=""]::before { content: none; }
+            table.tabel-hp tbody > tr > td[colspan] { justify-content: center; text-align: center; }
+            table.tabel-hp tbody > tr > td.hp-sembunyi { display: none; }
+            table.tabel-hp tbody > tr > td > .hp-isi { display: block; min-width: 0; text-align: right; }
+            table.tabel-hp tbody > tr > td > .hp-isi > * { display: block; margin-left: auto; }
+            table.tabel-hp tbody > tr > td > .hp-isi > br { display: none; }
+            table.tabel-hp tbody > tr > td.hp-judul > .hp-isi { text-align: left; }
+            /* kolom foto: gambar di atas kartu, lebih besar, tanpa label */
+            table.tabel-hp tbody > tr > td:has(img) { justify-content: center; }
+            table.tabel-hp tbody > tr > td:has(img)::before { content: none; }
+            table.tabel-hp tbody > tr > td img { height: 110px; width: auto; max-width: 100%; object-fit: contain; }
+            /* baris pertama yang terlihat (mis. nama/resi) jadi judul kartu */
+            table.tabel-hp tbody > tr > td.hp-judul { font-size: 17px; font-weight: 800; color: #12285C; }
+            table.tabel-hp tbody > tr > td.hp-judul::before { content: none; }
+            .overflow-x-auto:has(> table.tabel-hp) { background: transparent; overflow: visible; }
+
+            /* Tabel berisi isian (mis. Status Perjalanan): tetap tabel, geser ke samping */
+            .overflow-x-auto > table:not(.tabel-hp) { min-width: 680px; }
             .overflow-x-auto { -webkit-overflow-scrolling: touch; }
         }
     </style>
@@ -87,6 +139,39 @@
     </main>
 </div>
 <script>
+    // Tabel → kartu di HP: label setiap kolom diambil dari judul tabel (thead)
+    (function () {
+        document.querySelectorAll('table').forEach(function (t) {
+            if (!t.tHead || !t.tHead.rows.length || t.querySelector('input:not([type=hidden]), select, textarea')) return;
+            var label = Array.prototype.map.call(t.tHead.rows[0].cells, function (th) { return th.textContent.trim(); });
+            t.classList.add('tabel-hp');
+            Array.prototype.forEach.call(t.tBodies, function (tb) {
+                Array.prototype.forEach.call(tb.rows, function (tr) {
+                    var i = 0, judulDipasang = false;
+                    Array.prototype.forEach.call(tr.cells, function (td) {
+                        var l = label[i] || '';
+                        // Isi sel yang lebih dari satu bagian (mis. email + telepon) dibungkus jadi satu kolom
+                        var bagian = Array.prototype.filter.call(td.childNodes, function (n) {
+                            return n.nodeType === 1 || (n.nodeType === 3 && n.textContent.trim());
+                        });
+                        if (bagian.length > 1) {
+                            var isi = document.createElement('div');
+                            isi.className = 'hp-isi';
+                            bagian.forEach(function (n) { isi.appendChild(n); });
+                            td.appendChild(isi);
+                        }
+                        if (!td.hasAttribute('colspan')) {
+                            td.setAttribute('data-label', l);
+                            if (/^(no\.?|#)$/i.test(l)) td.classList.add('hp-sembunyi');      // nomor urut tidak perlu di HP
+                            else if (!judulDipasang && !td.querySelector('img')) { td.classList.add('hp-judul'); judulDipasang = true; }
+                        }
+                        i += td.colSpan || 1;
+                    });
+                });
+            });
+        });
+    })();
+
     // Menu samping: di HP disembunyikan dan dibuka lewat tombol ☰
     (function () {
         var sidebar = document.getElementById('sidebar');
