@@ -137,7 +137,7 @@
                 <div>
                     <h4 class="pwb-trk-info-title">Informasi</h4>
                     <p class="pwb-trk-info-text">
-                        Posisi Kendaraan diperbarui setiap 2 jam. Jika ada kendala, silahkan hubungi tim kami melalui
+                        Posisi Kendaraan diperbarui setiap 30 menit. Jika ada kendala, silahkan hubungi tim kami melalui
                         <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">WhatsApp</a>.
                     </p>
                 </div>

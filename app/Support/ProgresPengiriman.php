@@ -13,12 +13,12 @@ use Carbon\CarbonInterface;
  *   menunggu ─▶ menuju_pabrik ─▶ muat ─▶ dalam_perjalanan ─▶ tiba ─▶ (supir konfirmasi) terkirim
  *                    (masuk area pabrik)  (keluar area pabrik)  (masuk area tujuan)
  *
- * Setiap perubahan tahap & setiap posisi rutin (±2 jam) dicatat sebagai langkah perjalanan
+ * Setiap perubahan tahap & posisi rutin (±tiap 1,5 jam) dicatat sebagai langkah perjalanan
  * dengan waktu = timestamp lokasi dari HP.
  */
 class ProgresPengiriman
 {
-    public const INTERVAL_NORMAL = 120;   // menit
+    public const INTERVAL_NORMAL = 30;    // menit: lokasi HP dikirim tiap 30 menit
     public const INTERVAL_DEKAT = 15;     // menit, saat dekat pabrik / tujuan
 
     /** Jarak minimal antar langkah "Posisi Truk" supaya tidak terlalu rapat (menit). */
@@ -150,7 +150,7 @@ class ProgresPengiriman
             $tahapBerubah = true;
         }
 
-        // 5. Posisi rutin selama di jalan (±tiap 2 jam) → tambah langkah "Posisi Truk"
+        // 5. Posisi rutin selama di jalan → tambah langkah "Posisi Truk" (maks. tiap ±1,5 jam supaya tidak terlalu ramai)
         if (! $tahapBerubah && in_array($status, ['menuju_pabrik', 'dalam_perjalanan'], true)) {
             $terakhir = $p->events()->where('selesai', true)->max('waktu');
             if (! $terakhir || $waktu->diffInMinutes($terakhir, true) >= self::JEDA_POSISI) {

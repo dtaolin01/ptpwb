@@ -15,8 +15,8 @@ use App\Support\ProgresPengiriman;
  */
 class PetaArmadaController extends Controller
 {
-    /** Lokasi lebih lama dari ini ditandai "lama" (abu-abu). */
-    private const JAM_LAMA = 3;
+    /** Lokasi lebih lama dari ini ditandai "lama" (abu-abu). HP mengirim tiap 30 menit. */
+    private const JAM_LAMA = 1;
 
     public function index()
     {

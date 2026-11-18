@@ -132,7 +132,7 @@
             <h2 class="font-bold text-pwb-navy"><i class="fa-solid fa-location-dot mr-2"></i>Titik di Peta</h2>
             <p class="mt-1 text-xs text-slate-500">
                 Boleh dikosongkan, sistem mengisi otomatis: <b>Asal</b> = posisi truk saat ini (dari aplikasi supir),
-                <b>Tujuan</b> = lokasi perusahaan pelanggan, <b>Posisi Truk</b> = lokasi HP supir tiap 2 jam.
+                <b>Tujuan</b> = lokasi perusahaan pelanggan, <b>Posisi Truk</b> = lokasi HP supir tiap 30 menit.
                 Status perjalanan juga berubah sendiri sesuai rute (lewat pabrik / dalam kota).
                 Klik peta atau cari nama tempat hanya kalau ingin mengubah titiknya.
             </p>

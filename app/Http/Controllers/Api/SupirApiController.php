@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  *
  *   POST /api/supir/login              telepon + plat         -> token
  *   GET  /api/supir/pesanan            pesanan aktif truk ini
- *   POST /api/supir/lokasi             lat, lng (tiap 2 jam)
+ *   POST /api/supir/lokasi             lat, lng (tiap 30 menit)
  *   POST /api/supir/pesanan/{id}/selesai
  *   POST /api/supir/logout
  *
@@ -132,7 +132,7 @@ class SupirApiController extends Controller
             'status'        => $p?->status,
             'status_label'  => $p?->status_label,
             // Aplikasi mengirim lokasi berikutnya setelah sekian menit
-            // (15 menit saat dekat pabrik/tujuan, selain itu 120 menit)
+            // (15 menit saat dekat pabrik/tujuan, selain itu 30 menit)
             'interval_menit' => $interval,
         ]);
     }
