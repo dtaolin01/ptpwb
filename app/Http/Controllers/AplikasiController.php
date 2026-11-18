@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AplikasiVersi;
+use App\Support\InfoApk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -32,12 +33,12 @@ class AplikasiController extends Controller
         $data = $request->validate([
             'aplikasi'     => ['required', Rule::in(array_keys(AplikasiVersi::APLIKASI))],
             'file'         => ['required', 'file', 'max:204800'],    // 200 MB
-            'version_code' => ['required', 'integer', 'min:1', 'gt:'.$terakhir],
-            'version_name' => ['required', 'string', 'max:30', 'regex:/^[0-9A-Za-z.\-]+$/'],
+            // Biasanya dibaca otomatis dari APK; isian manual hanya dipakai kalau APK tidak bisa dibaca
+            'version_code' => ['nullable', 'integer', 'min:1'],
+            'version_name' => ['nullable', 'string', 'max:30', 'regex:/^[0-9A-Za-z.\-]+$/'],
             'catatan'      => ['nullable', 'string', 'max:2000'],
             'wajib'        => ['nullable', 'boolean'],
         ], [
-            'version_code.gt'    => "Version code harus lebih besar dari versi terakhir ($terakhir).",
             'version_name.regex' => 'Version name hanya angka, huruf, titik, dan strip. Contoh: 1.2.0',
             'file.max'           => 'Ukuran APK maksimal 200 MB.',
         ], [
@@ -47,11 +48,35 @@ class AplikasiController extends Controller
         ]);
 
         $file = $request->file('file');
+        $data['version_name'] = preg_replace('/[^0-9A-Za-z.\-]+/', '-', (string) ($data['version_name'] ?? ''));
 
         // Pastikan benar-benar APK (berkas zip berakhiran .apk)
         $awal = (string) file_get_contents($file->getRealPath(), false, null, 0, 2);
         if (strtolower($file->getClientOriginalExtension()) !== 'apk' || $awal !== 'PK') {
             return back()->withInput()->withErrors(['file' => 'File harus berupa APK (.apk).']);
+        }
+
+        // Versi diambil dari dalam APK, supaya sama persis dengan aplikasi yang terpasang di HP.
+        // (Kalau angka di website lebih besar dari versi APK, HP akan terus menawarkan pembaruan.)
+        $apk = InfoApk::baca($file->getRealPath());
+        if ($apk && $apk['version_code']) {
+            $pkg = (string) $apk['package'];
+            $apkChecker = str_contains($pkg, 'checker');
+            if ($pkg !== '' && $apkChecker !== ($data['aplikasi'] === 'checker')) {
+                return back()->withInput()->withErrors(['file' =>
+                    "APK ini adalah aplikasi {$pkg}, bukan ".AplikasiVersi::APLIKASI[$data['aplikasi']].'. Periksa pilihan aplikasi atau file APK-nya.']);
+            }
+            $data['version_code'] = (int) $apk['version_code'];
+            $data['version_name'] = $apk['version_name'] ?: ($data['version_name'] ?? (string) $apk['version_code']);
+        } elseif (empty($data['version_code']) || empty($data['version_name'])) {
+            return back()->withInput()->withErrors(['version_code' =>
+                'Versi tidak bisa dibaca dari APK. Isi version code dan version name sesuai build.gradle.']);
+        }
+
+        if ($data['version_code'] <= $terakhir) {
+            return back()->withInput()->withErrors(['file' =>
+                "APK ini versionCode {$data['version_code']}, padahal versi terakhir di website sudah {$terakhir}. "
+                ."Naikkan versionCode di build.gradle (mis. ".($terakhir + 1).'), build ulang, lalu unggah lagi.']);
         }
 
         $path = $file->storeAs('aplikasi', $data['aplikasi'].'-'.$data['version_code'].'-'.$data['version_name'].'.apk', 'local');
