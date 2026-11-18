@@ -22,6 +22,7 @@ class PelangganController extends Controller
         $pelanggan = $data->getCollection()->map(fn ($p) => [
             'nama'   => $p->nama,
             'kontak' => $p->kontak,
+            'telepon' => $p->telepon,
             'email'  => $p->email,
             'alamat' => $p->alamat,
             'lokasi' => $p->titik() !== null,
@@ -106,7 +107,7 @@ class PelangganController extends Controller
 
     private function tanpaTitik(array $data): array
     {
-        return array_intersect_key($data, array_flip(['nama', 'kontak', 'email', 'alamat']));
+        return array_intersect_key($data, array_flip(['nama', 'kontak', 'telepon', 'email', 'alamat']));
     }
 
     private function kembali(Pelanggan $pelanggan, bool $ketemu, string $pesan)
@@ -137,6 +138,7 @@ class PelangganController extends Controller
         return $request->validate([
             'nama'   => ['required', 'string', 'max:150'],
             'kontak' => ['required', 'string', 'max:100'],
+            'telepon' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s().]{8,30}$/'],
             'email'  => ['required', 'email', 'max:150', Rule::unique('pelanggan', 'email')->ignore($pelanggan?->id)],
             'alamat' => ['required', 'string', 'max:255'],
             'lat'    => ['nullable', 'numeric', 'between:-90,90'],
@@ -145,6 +147,7 @@ class PelangganController extends Controller
             'cari_ulang'    => ['nullable', 'boolean'],
         ], [
             'email.unique' => 'Email sudah dipakai pelanggan lain.',
+            'telepon.regex' => 'Nomor WhatsApp hanya boleh berisi angka, contoh 0812 3456 7890.',
         ], [
             'nama' => 'nama perusahaan',
         ]);

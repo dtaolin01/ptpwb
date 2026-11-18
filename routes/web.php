@@ -52,6 +52,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/', 'store')->name('trackingAdmin.store');
         Route::get('/{pengiriman}/edit', 'edit')->name('trackingAdmin.edit');
         Route::get('/{pengiriman}/laporan', 'laporan')->name('trackingAdmin.laporan');
+        Route::get('/{pengiriman}/laporan-pelanggan', 'laporanPelanggan')->name('trackingAdmin.laporanPelanggan');
+        Route::post('/{pengiriman}/laporan-pelanggan/kirim', 'kirimLaporan')->name('trackingAdmin.kirimLaporan');
         Route::put('/{pengiriman}', 'update')->name('trackingAdmin.update');
         Route::delete('/{pengiriman}', 'destroy')->name('trackingAdmin.destroy');
     });

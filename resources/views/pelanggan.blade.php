@@ -36,7 +36,7 @@
                     <tr>
                         <td class="px-4 py-5">{{ $data->firstItem() + $loop->index }}</td>
                         <td class="px-4 py-5 font-bold">{{ $p['nama'] }}</td>
-                        <td class="px-4 py-5">{{ $p['kontak'] }}</td>
+                        <td class="px-4 py-5">{{ $p['kontak'] }}@if ($p['telepon'])<span class="block text-xs text-slate-500"><i class="fa-brands fa-whatsapp"></i> {{ $p['telepon'] }}</span>@endif</td>
                         <td class="px-4 py-5 text-xs text-pwb-blue">{{ $p['email'] }}</td>
                         <td class="px-4 py-5 text-xs">
                             {{ $p['alamat'] }}
