@@ -42,7 +42,7 @@
             <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-600">
                 <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#15803d]"></span>Ada pesanan</span>
                 <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#06316b]"></span>Tanpa pesanan</span>
-                <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-slate-400"></span>Lokasi &gt; 3 jam lalu</span>
+                <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-slate-400"></span>Lokasi &gt; 1 jam lalu</span>
                 <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#f0cc1b]"></span>Pabrik</span>
                 <span class="ml-auto text-slate-500">Diperbarui <span id="jam-update">{{ $peta['diperbarui'] }}</span> · otomatis tiap 1 menit</span>
             </div>
