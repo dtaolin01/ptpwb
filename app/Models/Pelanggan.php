@@ -9,7 +9,7 @@ class Pelanggan extends Model
 {
     protected $table = 'pelanggan';
 
-    protected $fillable = ['nama', 'kontak', 'email', 'alamat', 'lat', 'lng', 'kota', 'lokasi_sumber'];
+    protected $fillable = ['nama', 'kontak', 'telepon', 'email', 'alamat', 'lat', 'lng', 'kota', 'lokasi_sumber'];
 
     /** [lat, lng] lokasi perusahaan, atau null kalau belum ada. */
     public function titik(): ?array

@@ -35,6 +35,13 @@
                 @error('email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
 
+            <div>
+                <label for="telepon" class="{{ $label }}">No. WhatsApp <span class="font-normal text-slate-400">(opsional)</span></label>
+                <input id="telepon" name="telepon" inputmode="tel" value="{{ old('telepon', $pelanggan->telepon) }}" placeholder="0812 3456 7890" class="{{ $input }}">
+                <p class="mt-1 text-xs text-slate-500">Dipakai untuk mengirim laporan pengiriman lewat WhatsApp.</p>
+                @error('telepon') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+            </div>
+
             <div class="md:col-span-2">
                 <label for="alamat" class="{{ $label }}">Alamat</label>
                 <textarea id="alamat" name="alamat" rows="3" class="{{ $input }}">{{ old('alamat', $pelanggan->alamat) }}</textarea>

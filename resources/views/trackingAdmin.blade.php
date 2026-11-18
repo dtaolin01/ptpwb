@@ -40,6 +40,10 @@
                        class="inline-flex items-center gap-2 rounded-lg {{ $pengiriman->status === 'terkirim' ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-500 hover:bg-slate-600' }} px-3 py-1.5 text-xs font-bold text-white">
                         <i class="fa-solid fa-file-lines"></i> Laporan
                     </a>
+                    <a href="{{ route('trackingAdmin.laporanPelanggan', $pengiriman) }}" target="_blank" title="Laporan PDF untuk dikirim ke pelanggan"
+                       class="inline-flex items-center gap-2 rounded-lg {{ $pengiriman->status === 'terkirim' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-slate-500 hover:bg-slate-600' }} px-3 py-1.5 text-xs font-bold text-white">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim ke Pelanggan
+                    </a>
                     <a href="{{ route('trackingAdmin.edit', $pengiriman) }}"
                        class="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800">
                         <i class="fa-solid fa-pen"></i> Ubah
@@ -169,6 +173,15 @@
                                        class="mb-2 inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-bold text-white hover:bg-green-700">
                                         <i class="fa-solid fa-file-lines"></i> Laporan
                                     </a>
+                                    <a href="{{ route('trackingAdmin.laporanPelanggan', $p) }}" target="_blank" title="Kirim laporan PDF ke pelanggan"
+                                       class="mb-2 inline-flex items-center gap-1 rounded-md bg-emerald-700 px-2 py-1 text-xs font-bold text-white hover:bg-emerald-800">
+                                        <i class="fa-solid fa-paper-plane"></i> Ke Pelanggan
+                                    </a>
+                                    @if ($p->laporan_dikirim_at)
+                                        <span class="mb-2 block text-[11px] text-green-700" title="{{ $p->laporan_dikirim_ke }}">
+                                            <i class="fa-solid fa-check"></i> Laporan terkirim {{ $p->laporan_dikirim_at->format('d/m H.i') }}
+                                        </span>
+                                    @endif
                                 @endif
                                 @include('partialsadmin.aksi', [
                                     'edit'  => route('trackingAdmin.edit', $p),

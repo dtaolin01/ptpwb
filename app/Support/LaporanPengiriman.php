@@ -119,6 +119,19 @@ class LaporanPengiriman
         ];
     }
 
+    /**
+     * Versi untuk pelanggan: tanpa data internal (telepon supir, jejak GPS mentah, jumlah titik).
+     */
+    public static function untukPelanggan(Pengiriman $p): array
+    {
+        $lap = self::untuk($p);
+
+        unset($lap['armada']['Telepon'], $lap['ringkasan']['titik'], $lap['peta']['jejak'], $lap['pelanggan']['Email'], $lap['pelanggan']['Kontak']);
+        $lap['data']['Rute'] = $p->lewat_pabrik ? 'Muat di pabrik, lalu ke tujuan' : 'Dalam kota (langsung ke tujuan)';
+
+        return $lap;
+    }
+
     private static function jam(mixed $w): ?string
     {
         return $w ? Carbon::parse($w)->locale('id')->translatedFormat('d M Y, H.i') : null;

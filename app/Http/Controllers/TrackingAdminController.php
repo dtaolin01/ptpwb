@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\LaporanPengirimanMail;
 use App\Models\Pelanggan;
 use App\Models\Pengiriman;
 use App\Models\Truck;
@@ -12,6 +13,8 @@ use App\Support\PetaPengiriman;
 use App\Support\ProgresPengiriman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class TrackingAdminController extends Controller
@@ -166,6 +169,90 @@ class TrackingAdminController extends Controller
             'p'   => $pengiriman,
             'lap' => LaporanPengiriman::untuk($pengiriman),
         ]);
+    }
+
+    /**
+     * Versi laporan untuk pelanggan (tanpa data internal). Hanya admin yang bisa membuka,
+     * mengunduh PDF-nya, dan mengirimkannya ke pelanggan (email / WhatsApp).
+     */
+    public function laporanPelanggan(Pengiriman $pengiriman)
+    {
+        $pengiriman->loadMissing('pelanggan');
+
+        return view('laporanPelanggan', [
+            'p'      => $pengiriman,
+            'lap'    => LaporanPengiriman::untukPelanggan($pengiriman),
+            'namaPdf' => LaporanPengirimanMail::namaFile($pengiriman),
+            'wa'     => self::nomorWa($pengiriman->pelanggan?->telepon),
+        ]);
+    }
+
+    /**
+     * Kirim laporan ke pelanggan.
+     *  - via=email    : PDF (dibuat di browser admin) dikirim sebagai lampiran email.
+     *  - via=whatsapp : hanya mencatat bahwa admin sudah membagikan PDF lewat WhatsApp.
+     */
+    public function kirimLaporan(Request $request, Pengiriman $pengiriman)
+    {
+        $via = $request->input('via') === 'whatsapp' ? 'whatsapp' : 'email';
+
+        if ($via === 'whatsapp') {
+            $pengiriman->update([
+                'laporan_dikirim_at' => now(),
+                'laporan_dikirim_ke' => trim('WhatsApp '.($pengiriman->pelanggan?->telepon ?: '')),
+            ]);
+
+            return response()->json(['ok' => true]);
+        }
+
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:150'],
+            'pesan' => ['nullable', 'string', 'max:2000'],
+            'pdf'   => ['required', 'file', 'mimetypes:application/pdf', 'max:15360'],
+        ], [
+            'email.required' => 'Alamat email pelanggan wajib diisi.',
+            'email.email'    => 'Format alamat email tidak valid.',
+            'pdf.required'   => 'File PDF laporan gagal dibuat. Coba lagi.',
+            'pdf.mimetypes'  => 'File laporan harus berupa PDF.',
+        ]);
+
+        try {
+            Mail::to($data['email'])->send(new LaporanPengirimanMail(
+                $pengiriman,
+                file_get_contents($request->file('pdf')->getRealPath()),
+                $data['pesan'] ?? null,
+            ));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'Email gagal dikirim. Pastikan pengaturan email (SMTP) di server sudah benar. Detail: '.Str::limit($e->getMessage(), 160),
+            ], 500);
+        }
+
+        $pengiriman->update([
+            'laporan_dikirim_at' => now(),
+            'laporan_dikirim_ke' => $data['email'],
+        ]);
+
+        return response()->json(['ok' => true, 'message' => 'Laporan berhasil dikirim ke '.$data['email'].'.']);
+    }
+
+    /** "0812-3456 789" → "628123456789" untuk link wa.me, atau null kalau bukan nomor HP. */
+    private static function nomorWa(?string $kontak): ?string
+    {
+        $n = preg_replace('/\D+/', '', (string) $kontak);
+        if ($n === '') {
+            return null;
+        }
+        if (str_starts_with($n, '0')) {
+            $n = '62'.substr($n, 1);
+        } elseif (str_starts_with($n, '8')) {
+            $n = '62'.$n;
+        }
+
+        return strlen($n) >= 10 ? $n : null;
     }
 
     public function destroy(Pengiriman $pengiriman)

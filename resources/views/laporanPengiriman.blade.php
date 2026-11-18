@@ -40,9 +40,14 @@
             <a href="{{ route('trackingAdmin', ['resi' => $p->no_resi]) }}" class="text-sm font-bold text-pwb-navy hover:underline">
                 <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Tracking
             </a>
+            <div class="flex flex-wrap gap-2">
+            <a href="{{ route('trackingAdmin.laporanPelanggan', $p) }}" class="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800">
+                <i class="fa-solid fa-paper-plane mr-2"></i>Versi untuk Pelanggan
+            </a>
             <button type="button" onclick="window.print()" class="rounded-lg bg-pwb-navy px-5 py-2.5 text-sm font-bold text-white hover:bg-slate-900">
                 <i class="fa-solid fa-print mr-2"></i>Cetak / Simpan PDF
             </button>
+            </div>
         </div>
     </div>
 
@@ -66,6 +71,7 @@
             </div>
             <div class="text-right">
                 <h1 class="text-2xl font-extrabold text-pwb-navy">LAPORAN PENGIRIMAN</h1>
+                <p class="text-[11px] font-bold uppercase tracking-wide text-red-600">Dokumen internal</p>
                 <p class="mt-1 text-sm font-bold">No. Resi: {{ $p->no_resi }}</p>
                 <p class="text-xs text-slate-500">Dicetak {{ now()->locale('id')->translatedFormat('d F Y, H.i') }} WITA</p>
             </div>
