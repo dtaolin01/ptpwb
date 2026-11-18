@@ -74,13 +74,14 @@
                 {!! $err('file') !!}
             </div>
             <div>
-                <label for="version_code" class="{{ $label }}">Version code</label>
-                <input id="version_code" type="number" min="1" name="version_code" value="{{ old('version_code') }}" placeholder="Contoh: 2" class="{{ $input }}">
+                <label for="version_code" class="{{ $label }}">Version code <span class="font-normal text-slate-400">(otomatis dari APK)</span></label>
+                <input id="version_code" type="number" min="1" name="version_code" value="{{ old('version_code') }}" placeholder="Boleh dikosongkan" class="{{ $input }}">
+                <p class="mt-1 text-xs text-slate-500">Dibaca langsung dari file APK. Isi hanya kalau diminta.</p>
                 {!! $err('version_code') !!}
             </div>
             <div>
-                <label for="version_name" class="{{ $label }}">Version name</label>
-                <input id="version_name" name="version_name" value="{{ old('version_name') }}" placeholder="Contoh: 1.1.0" class="{{ $input }}">
+                <label for="version_name" class="{{ $label }}">Version name <span class="font-normal text-slate-400">(otomatis dari APK)</span></label>
+                <input id="version_name" name="version_name" value="{{ old('version_name') }}" placeholder="Boleh dikosongkan" class="{{ $input }}">
                 {!! $err('version_name') !!}
             </div>
             <div class="md:col-span-2">
