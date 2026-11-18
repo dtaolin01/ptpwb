@@ -49,6 +49,7 @@
                     'Pelanggan'     => $detail['pelanggan'],
                     'Asal'          => $detail['asal'],
                     'Tujuan'        => $detail['tujuan'],
+                    'Rute'          => $detail['rute'],
                     'Jenis Muatan'  => $detail['muatan'],
                     'Armada'        => $detail['armada'],
                     'Estimasi Tiba' => $detail['estimasi'],

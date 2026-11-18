@@ -183,7 +183,9 @@ class SupirApiController extends Controller
     {
         $pabrik = \App\Support\Pabrik::data()['nama'];
         $keterangan = [
-            'menunggu'         => 'Pesanan baru. Status akan berubah otomatis saat truk mulai jalan.',
+            'menunggu'         => $p->lewat_pabrik
+                ? 'Pesanan baru. Muat dulu di '.$pabrik.'. Status berubah otomatis saat truk mulai jalan.'
+                : 'Pesanan dalam kota, langsung ke tujuan. Status berubah otomatis saat truk mulai jalan.',
             'menuju_pabrik'    => 'Truk sedang menuju '.$pabrik.' untuk muat barang.',
             'muat'             => 'Truk sedang muat di '.$pabrik.'.',
             'dalam_perjalanan' => 'Pesanan sedang dalam perjalanan menuju tujuan.',
@@ -206,6 +208,8 @@ class SupirApiController extends Controller
             'tanggal_kirim'     => $p->tanggal_kirim?->format('Y-m-d'),
             'estimasi_tiba'     => $p->estimasi_tiba?->format('Y-m-d'),
             'sudah_tiba'        => $p->status === 'tiba',
+            'lewat_pabrik'      => $p->lewat_pabrik,
+            'rute'              => $p->lewat_pabrik ? 'Lewat pabrik' : 'Dalam kota',
             'peta'              => PetaPengiriman::untuk($p),
         ];
     }

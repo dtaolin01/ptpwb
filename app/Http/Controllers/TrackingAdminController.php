@@ -56,6 +56,7 @@ class TrackingAdminController extends Controller
             'asal'      => $pengiriman->asal ?: '-',
             'tujuan'    => $pengiriman->tujuan,
             'muatan'    => $pengiriman->muatan,
+            'rute'      => $pengiriman->rute_label,
             'armada'    => $pengiriman->truck
                 ? 'Truk '.$pengiriman->truck->jenis.' '.$pengiriman->truck->plat
                 : 'Belum ditentukan',
@@ -88,6 +89,7 @@ class TrackingAdminController extends Controller
             'tanggal_kirim' => today(),
             'estimasi_tiba' => today()->addDay(),
             'status'        => 'menunggu',
+            'lewat_pabrik'  => true,
         ]);
 
         // Langkah standar; tahap berikutnya dicentang otomatis dari lokasi HP supir
@@ -109,6 +111,7 @@ class TrackingAdminController extends Controller
             $data['no_resi'] = $data['no_resi'] ?: Pengiriman::resiBaru($data['tanggal_kirim'] ? \Carbon\Carbon::parse($data['tanggal_kirim']) : null);
             $p = Pengiriman::create($this->dataPengiriman($data));
             $this->simpanLangkah($p, $data['events'] ?? []);
+            $this->rapikanLangkahRute($p);
 
             return $p;
         });
@@ -146,6 +149,7 @@ class TrackingAdminController extends Controller
 
             $pengiriman->update(array_merge($baru, ['no_resi' => $data['no_resi'] ?: $pengiriman->no_resi]));
             $this->simpanLangkah($pengiriman, $data['events'] ?? []);
+            $this->rapikanLangkahRute($pengiriman);
         });
 
         return redirect()->route('trackingAdmin', ['resi' => $pengiriman->no_resi])
@@ -183,6 +187,7 @@ class TrackingAdminController extends Controller
             'asal'             => ['nullable', 'string', 'max:150'],
             'tujuan'           => ['nullable', 'string', 'max:150'],
             'muatan'           => ['required', 'string', 'max:150'],
+            'lewat_pabrik'     => ['required', 'boolean'],
             'tanggal_kirim'    => ['required', 'date'],
             'estimasi_tiba'    => ['nullable', 'date', 'after_or_equal:tanggal_kirim'],
             'status'           => ['required', Rule::in(array_keys(Pengiriman::STATUS))],
@@ -247,6 +252,7 @@ class TrackingAdminController extends Controller
             'asal'          => $data['asal'] ?? null,
             'tujuan'        => $data['tujuan'],
             'muatan'        => $data['muatan'],
+            'lewat_pabrik'  => (bool) $data['lewat_pabrik'],
             'tanggal_kirim' => $data['tanggal_kirim'],
             'estimasi_tiba' => $data['estimasi_tiba'] ?? null,
             'status'        => $data['status'],
@@ -258,6 +264,17 @@ class TrackingAdminController extends Controller
             'posisi_lng'    => $data['posisi_lng'] ?? null,
             'posisi_update' => ($data['posisi_lat'] ?? null) !== null ? now() : null,
         ] + (isset($data['no_resi']) && $data['no_resi'] !== '' ? ['no_resi' => $data['no_resi']] : []);
+    }
+
+    /**
+     * Rute dalam kota: langkah "Menuju Pabrik" & "Sedang Muat di Pabrik" yang belum dilewati dihapus.
+     */
+    private function rapikanLangkahRute(Pengiriman $p): void
+    {
+        if (! $p->lewat_pabrik) {
+            $p->events()->whereIn('judul', Pengiriman::LANGKAH_PABRIK)->where('selesai', false)->delete();
+            ProgresPengiriman::susunUlang($p);
+        }
     }
 
     /**

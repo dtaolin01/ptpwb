@@ -39,7 +39,8 @@ class ProgresPengiriman
     public static function proses(Pengiriman $p, float $lat, float $lng, CarbonInterface $waktu): int
     {
         $pabrik = Pabrik::data();
-        $titikPabrik = Pabrik::titik();
+        // Rute dalam kota: tahap pabrik dilewati sama sekali
+        $titikPabrik = $p->lewat_pabrik ? Pabrik::titik() : null;
         $titikTujuan = self::titikTujuan($p);
         $posisi = [$lat, $lng];
 
@@ -88,13 +89,20 @@ class ProgresPengiriman
 
         $tahapBerubah = false;
 
+        // Rute diubah admin menjadi dalam kota di tengah jalan → langsung tahap pengiriman
+        if (! $titikPabrik && in_array($status, ['menuju_pabrik', 'muat'], true)) {
+            $status = 'dalam_perjalanan';
+            self::catat($p, self::L_PENGIRIMAN, $waktu, Geocoder::namaDaerah($lat, $lng));
+            $tahapBerubah = true;
+        }
+
         // 1. Pesanan baru: truk mulai bergerak
         if ($status === 'menunggu') {
             if ($titikPabrik) {
                 $status = 'menuju_pabrik';
                 self::catat($p, self::L_MENUJU_PABRIK, $waktu, $p->asal ?: ($ubah['asal'] ?? null));
             } else {
-                // Pabrik belum diatur → langsung tahap pengiriman
+                // Rute dalam kota (atau pabrik belum diatur) → langsung tahap pengiriman
                 $status = 'dalam_perjalanan';
                 self::catat($p, self::L_PENGIRIMAN, $waktu, $p->asal ?: ($ubah['asal'] ?? null));
             }
