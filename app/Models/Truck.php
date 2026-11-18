@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Truck extends Model
 {
-    public const JENIS = ['Tronton', 'Fuso'];
+    public const JENIS = ['Tronton', 'Fuso', 'Truk PS'];
 
     protected $fillable = ['foto', 'plat', 'jenis', 'kapasitas_ton', 'supir_id', 'status'];
 
