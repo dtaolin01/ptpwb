@@ -21,8 +21,11 @@ class ProgresPengiriman
     public const INTERVAL_NORMAL = 30;    // menit: lokasi HP dikirim tiap 30 menit
     public const INTERVAL_DEKAT = 15;     // menit, saat dekat pabrik / tujuan
 
-    /** Jarak minimal antar langkah "Posisi Truk" supaya tidak terlalu rapat (menit). */
-    private const JEDA_POSISI = 90;
+    /**
+     * Jarak minimal antar langkah "Posisi Truk" (menit). Sedikit di bawah 30 menit karena
+     * Android menjalankan jadwal 30 menit tidak tepat ke menit (bisa lebih cepat beberapa menit).
+     */
+    private const JEDA_POSISI = 25;
 
     /** Judul langkah standar (harus sama dengan Pengiriman::LANGKAH_STANDAR). */
     public const L_DIBUAT = 'Pesanan Dibuat';
@@ -150,7 +153,7 @@ class ProgresPengiriman
             $tahapBerubah = true;
         }
 
-        // 5. Posisi rutin selama di jalan → tambah langkah "Posisi Truk" (maks. tiap ±1,5 jam supaya tidak terlalu ramai)
+        // 5. Posisi rutin selama di jalan → tambah langkah "Posisi Truk" (setiap kiriman lokasi rutin ±30 menit)
         if (! $tahapBerubah && in_array($status, ['menuju_pabrik', 'dalam_perjalanan'], true)) {
             $terakhir = $p->events()->where('selesai', true)->max('waktu');
             if (! $terakhir || $waktu->diffInMinutes($terakhir, true) >= self::JEDA_POSISI) {
