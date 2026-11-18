@@ -35,6 +35,27 @@
         <div class="rounded-xl border border-pwb-line bg-white p-6">
             <h2 class="mb-4 font-bold text-pwb-navy"><i class="fa-solid fa-cube mr-2"></i>Data Pengiriman</h2>
 
+            {{-- Rute: lewat pabrik atau dalam kota --}}
+            @php $lewat = (string) old('lewat_pabrik', ($pengiriman->lewat_pabrik ?? true) ? '1' : '0'); @endphp
+            <p class="{{ $label }}">Rute Pengiriman</p>
+            <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-pwb-line p-4 has-[:checked]:border-pwb-blue has-[:checked]:bg-pwb-sky/40">
+                    <input type="radio" name="lewat_pabrik" value="1" @checked($lewat === '1') class="rute-pilihan mt-1 h-4 w-4">
+                    <span>
+                        <span class="block text-sm font-bold text-pwb-navy"><i class="fa-solid fa-industry mr-1"></i> Lewat pabrik</span>
+                        <span class="block text-xs text-slate-500">Truk muat dulu di pabrik: Menuju Pabrik → Muat → Pengiriman → Tiba.</span>
+                    </span>
+                </label>
+                <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-pwb-line p-4 has-[:checked]:border-pwb-blue has-[:checked]:bg-pwb-sky/40">
+                    <input type="radio" name="lewat_pabrik" value="0" @checked($lewat === '0') class="rute-pilihan mt-1 h-4 w-4">
+                    <span>
+                        <span class="block text-sm font-bold text-pwb-navy"><i class="fa-solid fa-city mr-1"></i> Dalam kota</span>
+                        <span class="block text-xs text-slate-500">Langsung ke tujuan tanpa ke pabrik: Pengiriman → Tiba.</span>
+                    </span>
+                </label>
+            </div>
+            {!! $err('lewat_pabrik') !!}
+
             <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
                 <div>
                     <label for="no_resi" class="{{ $label }}">No. Resi</label>
@@ -112,7 +133,7 @@
             <p class="mt-1 text-xs text-slate-500">
                 Boleh dikosongkan, sistem mengisi otomatis: <b>Asal</b> = posisi truk saat ini (dari aplikasi supir),
                 <b>Tujuan</b> = lokasi perusahaan pelanggan, <b>Posisi Truk</b> = lokasi HP supir tiap 2 jam.
-                Status perjalanan (menuju pabrik → muat → pengiriman → tiba) juga berubah sendiri.
+                Status perjalanan juga berubah sendiri sesuai rute (lewat pabrik / dalam kota).
                 Klik peta atau cari nama tempat hanya kalau ingin mengubah titiknya.
             </p>
 
@@ -233,4 +254,32 @@
 @push('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script src="{{ asset('js/admin-tracking-form.js') }}?v={{ filemtime(public_path('js/admin-tracking-form.js')) }}"></script>
+    <script>
+    // Rute dalam kota → sembunyikan langkah pabrik yang belum dilewati (tidak ikut disimpan)
+    document.addEventListener('DOMContentLoaded', function () {
+        var langkahPabrik = @json(\App\Models\Pengiriman::LANGKAH_PABRIK);
+        var tbody = document.getElementById('daftar-langkah');
+
+        function terapkan() {
+            var pilih = document.querySelector('input.rute-pilihan:checked');
+            var dalamKota = pilih && pilih.value === '0';
+            tbody.querySelectorAll('tr.langkah').forEach(function (tr) {
+                var judul = tr.querySelector('input[name$="[judul]"]');
+                var selesai = tr.querySelector('input[type=checkbox][name$="[selesai]"]');
+                var pabrik = judul && langkahPabrik.indexOf(judul.value.trim()) >= 0 && !(selesai && selesai.checked);
+                var sembunyi = dalamKota && pabrik;
+                tr.style.display = sembunyi ? 'none' : '';
+                tr.querySelectorAll('input').forEach(function (i) { i.disabled = sembunyi; });
+            });
+            // nomor urut hanya untuk baris yang terlihat
+            var n = 0;
+            tbody.querySelectorAll('tr.langkah').forEach(function (tr) {
+                if (tr.style.display !== 'none') tr.querySelector('.nomor').textContent = ++n;
+            });
+        }
+
+        document.querySelectorAll('input.rute-pilihan').forEach(function (r) { r.addEventListener('change', terapkan); });
+        terapkan();
+    });
+    </script>
 @endpush

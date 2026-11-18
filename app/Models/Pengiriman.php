@@ -16,6 +16,7 @@ class Pengiriman extends Model
         'asal', 'asal_lat', 'asal_lng', 'tujuan_lat', 'tujuan_lng',
         'posisi_lat', 'posisi_lng', 'posisi_update',
         'waktu_tiba_pabrik', 'waktu_keluar_pabrik', 'waktu_tiba_tujuan',
+        'lewat_pabrik',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class Pengiriman extends Model
         'waktu_tiba_pabrik'   => 'datetime',
         'waktu_keluar_pabrik' => 'datetime',
         'waktu_tiba_tujuan'   => 'datetime',
+        'lewat_pabrik'        => 'boolean',
     ];
 
     // status => [label, warna badge]
@@ -39,6 +41,9 @@ class Pengiriman extends Model
         'terkirim'         => ['Terkirim',              'blue'],
         'tertunda'         => ['Tertunda',              'red'],
     ];
+
+    /** Langkah yang hanya ada kalau rute lewat pabrik. */
+    public const LANGKAH_PABRIK = ['Menuju Pabrik', 'Sedang Muat di Pabrik'];
 
     /** Status yang masih berjalan (muncul di aplikasi supir). */
     public const STATUS_AKTIF = ['menunggu', 'menuju_pabrik', 'muat', 'dalam_perjalanan', 'tiba', 'tertunda'];
@@ -83,5 +88,11 @@ class Pengiriman extends Model
     public function getStatusWarnaAttribute(): string
     {
         return self::STATUS[$this->status][1] ?? 'blue';
+    }
+
+    /** "Lewat pabrik" atau "Dalam kota". */
+    public function getRuteLabelAttribute(): string
+    {
+        return $this->lewat_pabrik ? 'Lewat pabrik (muat di pabrik)' : 'Dalam kota (langsung ke tujuan)';
     }
 }

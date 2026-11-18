@@ -26,9 +26,9 @@ class PetaPengiriman
             ];
         }
 
-        // Pabrik (tempat muat) di antara asal dan tujuan
+        // Pabrik (tempat muat) di antara asal dan tujuan — hanya untuk rute lewat pabrik
         $pabrik = Pabrik::data();
-        if ($pabrik['lat'] !== null && $pabrik['lng'] !== null) {
+        if ($p->lewat_pabrik && $pabrik['lat'] !== null && $pabrik['lng'] !== null) {
             $catatan = match (true) {
                 $p->waktu_keluar_pabrik !== null => 'Selesai muat '.$p->waktu_keluar_pabrik->locale('id')->translatedFormat('d M Y, H.i'),
                 $p->waktu_tiba_pabrik !== null   => 'Tiba '.$p->waktu_tiba_pabrik->locale('id')->translatedFormat('d M Y, H.i'),
