@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\CheckerController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
@@ -26,6 +27,10 @@ Route::get('/services', [ServiceController::class, 'service'])->name('services')
 Route::get('/contact', [ContactController::class, 'contact'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
+
+// Unduh APK aplikasi Android (pemasangan pertama & pembaruan otomatis)
+Route::get('/unduh/{aplikasi}/{id?}', [AplikasiController::class, 'unduh'])
+    ->whereIn('aplikasi', ['supir', 'checker'])->whereNumber('id')->name('unduh.aplikasi');
 
 /*
 |--------------------------------------------------------------------------
@@ -87,6 +92,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/{checker}', 'update')->name('checker.update');
         Route::delete('/{checker}', 'destroy')->name('checker.destroy');
     });
+
+    // Unggah APK baru aplikasi Supir / Checker
+    Route::get('/aplikasi', [AplikasiController::class, 'index'])->name('aplikasi');
+    Route::post('/aplikasi', [AplikasiController::class, 'store'])->name('aplikasi.store');
+    Route::delete('/aplikasi/{versi}', [AplikasiController::class, 'destroy'])->name('aplikasi.destroy');
 
     // Lokasi pabrik (tempat muat) + radius deteksi otomatis
     Route::get('/pabrik', [PabrikController::class, 'edit'])->name('pabrik');

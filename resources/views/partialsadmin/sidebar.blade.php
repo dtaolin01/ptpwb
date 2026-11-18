@@ -8,6 +8,7 @@
         ['Pelanggan',     'pelanggan',     'fa-users',        ['pelanggan', 'pelanggan.*']],
         ['Lokasi Pabrik', 'pabrik',        'fa-industry',     ['pabrik', 'pabrik.*']],
         ['Checker',       'checker',       'fa-user-check',   ['checker', 'checker.*']],
+        ['Update Aplikasi','aplikasi',     'fa-mobile-screen-button', ['aplikasi', 'aplikasi.*']],
         ['Pesan Masuk',   'pesan',         'fa-envelope',     ['pesan', 'pesan.*']],
     ];
 
