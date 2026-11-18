@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', 'create')->name('trackingAdmin.create');
         Route::post('/', 'store')->name('trackingAdmin.store');
         Route::get('/{pengiriman}/edit', 'edit')->name('trackingAdmin.edit');
+        Route::get('/{pengiriman}/laporan', 'laporan')->name('trackingAdmin.laporan');
         Route::put('/{pengiriman}', 'update')->name('trackingAdmin.update');
         Route::delete('/{pengiriman}', 'destroy')->name('trackingAdmin.destroy');
     });
