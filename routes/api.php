@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\Api\CheckerApiController;
 use App\Http\Controllers\Api\SupirApiController;
 use App\Http\Middleware\CheckerApi;
@@ -36,3 +37,10 @@ Route::prefix('checker')->controller(CheckerApiController::class)->group(functio
         Route::post('/logout', 'logout');
     });
 });
+
+/*
+| Versi terbaru aplikasi Android (dicek aplikasi saat dibuka untuk auto update)
+|   GET /api/aplikasi/supir/versi   |   GET /api/aplikasi/checker/versi
+*/
+Route::get('/aplikasi/{aplikasi}/versi', [AplikasiController::class, 'versi'])
+    ->whereIn('aplikasi', ['supir', 'checker'])->middleware('throttle:60,1');
