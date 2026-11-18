@@ -16,6 +16,12 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Username pemilik website: satu-satunya akun yang boleh menyetujui
+    | pendaftaran akun admin baru (menu "Persetujuan Akun").
+    */
+    'pemilik' => env('PWB_PEMILIK', 'darrentaolin'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

@@ -25,6 +25,15 @@ class AuthController extends Controller
         $field = filter_var($data['identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         if (Auth::attempt([$field => $data['identifier'], 'password' => $data['password']], $request->boolean('remember'))) {
+            // Akun baru harus disetujui pemilik dulu
+            if (! Auth::user()->disetujui) {
+                Auth::logout();
+
+                return back()
+                    ->withErrors(['identifier' => 'Akun Anda belum disetujui. Hubungi pemilik website untuk persetujuan.'])
+                    ->onlyInput('identifier');
+            }
+
             $request->session()->regenerate();
 
             return redirect()->intended(route('dashboard'));
@@ -59,15 +68,15 @@ class AuthController extends Controller
             'password.min'          => 'Password minimal 8 karakter.',
         ]);
 
-        $user = User::create([
-            $field     => $data['identifier'],
-            'password' => $data['password'],
+        // Belum bisa login sampai disetujui pemilik (menu "Persetujuan Akun")
+        User::create([
+            $field      => $data['identifier'],
+            'password'  => $data['password'],
+            'disetujui' => false,
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect()->route('dashboard');
+        return redirect()->route('admin.login')
+            ->with('status', 'Pendaftaran berhasil. Akun Anda menunggu persetujuan pemilik sebelum bisa dipakai login.');
     }
 
     public function logout(Request $request)

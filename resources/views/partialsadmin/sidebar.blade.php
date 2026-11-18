@@ -13,6 +13,13 @@
     ];
 
     $pesanBaru = \App\Models\ContactMessage::where('dibaca', false)->count();
+
+    // Menu persetujuan akun hanya untuk pemilik website
+    $akunMenunggu = 0;
+    if (auth()->user()?->isPemilik()) {
+        $menus[] = ['Persetujuan Akun', 'akunAdmin', 'fa-user-shield', ['akunAdmin', 'akunAdmin.*']];
+        $akunMenunggu = \App\Models\User::where('disetujui', false)->count();
+    }
 @endphp
 
 {{-- Laptop: menempel di kiri. HP/tablet (< 1024px): tersembunyi, dibuka lewat tombol ☰ di header --}}
@@ -34,6 +41,9 @@
                 <span class="flex-1">{{ $label }}</span>
                 @if ($route === 'pesan' && $pesanBaru > 0)
                     <span class="rounded-full bg-pwb-red px-2 py-0.5 text-xs font-bold">{{ $pesanBaru }}</span>
+                @endif
+                @if ($route === 'akunAdmin' && $akunMenunggu > 0)
+                    <span class="rounded-full bg-pwb-red px-2 py-0.5 text-xs font-bold">{{ $akunMenunggu }}</span>
                 @endif
             </a>
         @endforeach

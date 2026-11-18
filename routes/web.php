@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\AkunAdminController;
 use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\CheckerController;
 use App\Http\Controllers\ContactController;
@@ -38,8 +39,16 @@ Route::get('/unduh/{aplikasi}/{id?}', [AplikasiController::class, 'unduh'])
 |--------------------------------------------------------------------------
 | Belum login -> otomatis diarahkan ke /admin (lihat bootstrap/app.php).
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'disetujui'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Persetujuan akun admin baru — hanya pemilik website (config app.pemilik = darrentaolin)
+    Route::middleware('pemilik')->controller(AkunAdminController::class)->prefix('akun-admin')->group(function () {
+        Route::get('/', 'index')->name('akunAdmin');
+        Route::post('/{user}/setujui', 'setujui')->name('akunAdmin.setujui');
+        Route::post('/{user}/cabut', 'cabut')->name('akunAdmin.cabut');
+        Route::delete('/{user}', 'destroy')->name('akunAdmin.destroy');
+    });
 
     // Tracking pengiriman (data yang sama dipakai halaman publik /tracking)
     // Peta semua truk (lokasi terakhir dari aplikasi supir)

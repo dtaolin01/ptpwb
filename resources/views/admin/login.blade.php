@@ -6,6 +6,12 @@
 <h2>Sign In</h2>
 <p class="lead">Masuk ke akun untuk melanjutkan.</p>
 
+@if (session('status'))
+    <div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:8px;padding:10px 12px;font-size:14px;margin:-10px 0 18px;">
+        {{ session('status') }}
+    </div>
+@endif
+
 <form method="POST" action="{{ route('admin.login.submit') }}">
     @csrf
     @include('admin.partials.fields')
