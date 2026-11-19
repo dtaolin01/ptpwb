@@ -16,7 +16,8 @@ use App\Support\ProgresPengiriman;
 class PetaArmadaController extends Controller
 {
     /** Lokasi lebih lama dari ini ditandai "lama" (abu-abu). HP mengirim tiap 30 menit. */
-    private const JAM_LAMA = 1;
+    /** Lokasi dianggap lama kalau lebih dari ini (menit). Aplikasi supir mengirim tiap ±1 menit saat jalan, tiap 15 menit saat diam. */
+    private const MENIT_LAMA = 30;
 
     public function index()
     {
@@ -84,7 +85,7 @@ class PetaArmadaController extends Controller
                 'lng'         => $lng !== null ? (float) $lng : null,
                 'waktu'       => $waktu?->locale('id')->translatedFormat('d M Y, H.i'),
                 'waktu_relatif' => $waktu?->locale('id')->diffForHumans(),
-                'lama'        => $waktu ? $waktu->lt(now()->subHours(self::JAM_LAMA)) : true,
+                'lama'        => $waktu ? $waktu->lt(now()->subMinutes(self::MENIT_LAMA)) : true,
                 'zona'        => $zona,
                 'pesanan'     => $p ? [
                     'no_resi'   => $p->no_resi,

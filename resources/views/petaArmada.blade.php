@@ -42,9 +42,9 @@
             <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-600">
                 <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#15803d]"></span>Ada pesanan</span>
                 <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#06316b]"></span>Tanpa pesanan</span>
-                <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-slate-400"></span>Lokasi &gt; 1 jam lalu</span>
+                <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-slate-400"></span>Lokasi &gt; 30 menit lalu</span>
                 <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#f0cc1b]"></span>Pabrik</span>
-                <span class="ml-auto text-slate-500">Diperbarui <span id="jam-update">{{ $peta['diperbarui'] }}</span> · otomatis tiap 1 menit</span>
+                <span class="ml-auto text-slate-500">Diperbarui <span id="jam-update">{{ $peta['diperbarui'] }}</span> · otomatis tiap 20 detik</span>
             </div>
             <div class="relative">
                 <div id="peta-armada" class="overflow-hidden rounded-lg"></div>
@@ -257,7 +257,7 @@
         daftar();
         setTimeout(function () { map.invalidateSize(); }, 200);
 
-        // Perbarui posisi tiap 1 menit
+        // Perbarui posisi tiap 20 detik (aplikasi supir mengirim lokasi ±1 menit sekali saat truk berjalan)
         setInterval(function () {
             fetch(urlData, { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.ok ? r.json() : null; })
@@ -269,7 +269,7 @@
                     document.getElementById('jam-update').textContent = baru.diperbarui;
                 })
                 .catch(function () {});
-        }, 60000);
+        }, 20000);
     });
     </script>
 @endpush
