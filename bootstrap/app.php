@@ -24,5 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Gambar tanda tangan besar: jangan disimpan ke session saat validasi gagal
+        $exceptions->dontFlash(['ttd', 'password', 'password_confirmation', 'current_password']);
         //
     })->create();

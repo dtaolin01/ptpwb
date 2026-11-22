@@ -158,6 +158,14 @@
                 </div>
             @endif
 
+            @php $tertunda = \App\Support\CekDatabase::migrasiTertunda(); @endphp
+            @if ($tertunda)
+                <div class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Database website belum diperbarui ({{ count($tertunda) }} perubahan tertunda)</p>
+                    <p class="mt-1">Beberapa fitur bisa galat (error 500). Jalankan di SSH hosting:
+                        <code class="rounded bg-white px-1.5 py-0.5 font-mono text-xs">php artisan migrate --force &amp;&amp; php artisan optimize:clear</code></p>
+                </div>
+            @endif
             @yield('content')
         </section>
     </main>
