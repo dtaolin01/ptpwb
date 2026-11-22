@@ -84,3 +84,18 @@ Artisan::command('akun:setujui {username}', function (string $username) {
     $user->update(['disetujui' => true, 'disetujui_at' => now()]);
     $this->info("Akun {$user->label} disetujui.");
 })->purpose('Setujui akun admin dari terminal');
+
+// Hapus foto bukti pengiriman lama supaya ruang hosting tidak penuh (berkas ikut dihapus).
+Artisan::command('bukti:bersihkan {--bulan=12 : hapus foto yang lebih tua dari sekian bulan}', function () {
+    $batas = now()->subMonths(max(1, (int) $this->option('bulan')));
+    $n = 0;
+    \App\Models\BuktiFoto::where('created_at', '<', $batas)->chunkById(200, function ($daftar) use (&$n) {
+        foreach ($daftar as $f) {
+            $f->delete();
+            $n++;
+        }
+    });
+    $this->info("$n foto bukti dihapus (lebih tua dari {$batas->format('d M Y')}).");
+})->purpose('Hapus foto bukti pengiriman yang sudah lama');
+
+\Illuminate\Support\Facades\Schedule::command('bukti:bersihkan --bulan=12')->monthly();

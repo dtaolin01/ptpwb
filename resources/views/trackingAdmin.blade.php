@@ -53,6 +53,28 @@
                 </a>
             </div>
 
+            {{-- Foto bukti dari aplikasi supir --}}
+            @php $fotoBukti = $pengiriman->buktiFoto; @endphp
+            <div class="mt-3 border-b border-pwb-line pb-4">
+                <p class="mb-2 text-xs font-bold text-pwb-navy"><i class="fa-solid fa-camera mr-1"></i> Foto bukti dari sopir ({{ $fotoBukti->count() }})</p>
+                @if ($fotoBukti->isEmpty())
+                    <p class="text-[11px] text-slate-500">Belum ada foto. Sopir mengirim foto dari aplikasi saat barang sampai.</p>
+                @else
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach ($fotoBukti as $f)
+                            <div class="group relative overflow-hidden rounded-lg border border-pwb-line">
+                                <a href="{{ $f->url() }}" target="_blank"><img src="{{ $f->url() }}" loading="lazy" class="aspect-square w-full object-cover" alt="Foto bukti"></a>
+                                <form method="POST" action="{{ route('bukti.hapus', $f) }}" onsubmit="return confirm('Hapus foto ini?')" class="absolute right-1 top-1">
+                                    @csrf @method('DELETE')
+                                    <button class="rounded bg-white/90 px-1.5 py-0.5 text-[10px] text-red-600" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                                <p class="bg-white px-1 py-0.5 text-[10px] text-slate-500">{{ $f->created_at->format('d/m H.i') }} · {{ (int) round($f->ukuran / 1024) }} KB</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
             {{-- Surat jalan + status WhatsApp otomatis --}}
             <div class="mt-3 flex flex-col gap-2 border-b border-pwb-line pb-4 sm:flex-row sm:flex-wrap sm:items-center">
                 <a href="{{ route('suratJalan', $pengiriman) }}" target="_blank"

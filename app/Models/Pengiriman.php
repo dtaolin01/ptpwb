@@ -16,6 +16,11 @@ class Pengiriman extends Model
                 AdminNotifikasi::dariStatus($p);
             }
         });
+
+        // File foto bukti ikut dihapus (hapus lewat model supaya berkasnya juga terhapus)
+        static::deleting(function (Pengiriman $p) {
+            $p->buktiFoto()->get()->each->delete();
+        });
     }
 
     protected $table = 'pengiriman';
@@ -74,6 +79,11 @@ class Pengiriman extends Model
     public function truck(): BelongsTo
     {
         return $this->belongsTo(Truck::class);
+    }
+
+    public function buktiFoto(): HasMany
+    {
+        return $this->hasMany(BuktiFoto::class)->orderBy('id');
     }
 
     public function events(): HasMany

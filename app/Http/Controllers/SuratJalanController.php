@@ -82,7 +82,7 @@ class SuratJalanController extends Controller
 
     private function tampil(Pengiriman $p, bool $admin)
     {
-        $p->loadMissing(['pelanggan', 'truck.supir']);
+        $p->loadMissing(['pelanggan', 'truck.supir', 'buktiFoto']);
 
         return view('suratJalan', [
             'p'        => $p,

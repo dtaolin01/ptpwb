@@ -8,6 +8,7 @@ use App\Models\Pengiriman;
 use App\Models\SupirToken;
 use App\Models\Truck;
 use App\Support\DeteksiPabrik;
+use App\Support\FotoBukti;
 use App\Support\PetaPengiriman;
 use App\Support\Pelacakan;
 use App\Support\ProgresPengiriman;
@@ -163,6 +164,74 @@ class SupirApiController extends Controller
         return response()->json(['message' => 'Pesanan '.$p->no_resi.' selesai.']);
     }
 
+    /** Pesanan truk ini yang masih boleh diberi foto: aktif, atau selesai ≤ 2 hari lalu. */
+    private function pesananUntukFoto(Request $request, int $id): ?Pengiriman
+    {
+        return Pengiriman::where('id', $id)
+            ->where('truck_id', $request->attributes->get('truck')->id)
+            ->where(fn ($q) => $q->whereIn('status', Pengiriman::STATUS_AKTIF)
+                ->orWhere('updated_at', '>=', now()->subDays(2)))
+            ->first();
+    }
+
+    /** Supir mengirim foto bukti pengiriman (barang sampai / surat jalan diterima). */
+    public function kirimFoto(Request $request, int $id)
+    {
+        $p = $this->pesananUntukFoto($request, $id);
+        if (! $p) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+
+        $request->validate([
+            'foto' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'lat'  => ['nullable', 'numeric', 'between:-90,90'],
+            'lng'  => ['nullable', 'numeric', 'between:-180,180'],
+        ], [
+            'foto.required' => 'Foto belum dipilih.',
+            'foto.image'    => 'File harus berupa foto.',
+            'foto.mimes'    => 'Format foto harus JPG, PNG, atau WebP.',
+            'foto.max'      => 'Ukuran foto maksimal 10 MB.',
+        ]);
+
+        if ($p->buktiFoto()->count() >= FotoBukti::MAKS) {
+            return response()->json(['message' => 'Maksimal '.FotoBukti::MAKS.' foto per pesanan. Hapus foto lama dulu.'], 422);
+        }
+
+        try {
+            $foto = FotoBukti::simpan($p, $request->file('foto'), $request->float('lat') ?: null, $request->float('lng') ?: null);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'Foto tidak bisa diproses, coba ambil ulang.'], 422);
+        }
+
+        if ($p->buktiFoto()->count() === 1) {
+            rescue(fn () => \App\Models\AdminNotifikasi::create([
+                'jenis' => 'status', 'judul' => 'Foto bukti pengiriman',
+                'isi' => collect([$p->truck?->plat, $p->no_resi, $p->pelanggan?->nama])->filter()->implode(' · '),
+                'pengiriman_id' => $p->id, 'truck_id' => $p->truck_id,
+            ]));
+        }
+
+        return response()->json([
+            'message'    => 'Foto bukti terkirim.',
+            'foto'       => $foto->keArray(),
+            'foto_bukti' => $p->buktiFoto()->get()->map->keArray()->values(),
+        ], 201);
+    }
+
+    public function hapusFoto(Request $request, int $id, int $foto)
+    {
+        $p = $this->pesananUntukFoto($request, $id);
+        $f = $p?->buktiFoto()->whereKey($foto)->first();
+        if (! $f) {
+            return response()->json(['message' => 'Foto tidak ditemukan.'], 404);
+        }
+        $f->delete();
+
+        return response()->json(['message' => 'Foto dihapus.', 'foto_bukti' => $p->buktiFoto()->get()->map->keArray()->values()]);
+    }
+
     public function logout(Request $request)
     {
         $request->attributes->get('supir_token')->delete();
@@ -209,7 +278,10 @@ class SupirApiController extends Controller
             'nama_supir'        => $p->truck?->supir?->nama,
             'plat'              => $p->truck?->plat,
             'perusahaan_tujuan' => $p->pelanggan?->nama,
-            'muatan'            => $p->muatan,
+            'muatan'            => \App\Support\SuratJalan::ringkasMuatan($p),
+            // Foto bukti pengiriman yang sudah dikirim supir
+            'foto_bukti'        => $p->buktiFoto()->get()->map->keArray()->values(),
+            'maks_foto'         => FotoBukti::MAKS,
             'tanggal_kirim'     => $p->tanggal_kirim?->format('Y-m-d'),
             'estimasi_tiba'     => $p->estimasi_tiba?->format('Y-m-d'),
             'sudah_tiba'        => $p->status === 'tiba',

@@ -156,6 +156,20 @@
         </div>
     </div>
 
+    @if ($p->buktiFoto->isNotEmpty())
+        <section class="no-print mx-auto mb-10 max-w-4xl px-4">
+            <h2 class="mb-3 font-bold text-pwb-navy"><i class="fa-solid fa-camera mr-1"></i> Foto Bukti Pengiriman</h2>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                @foreach ($p->buktiFoto as $f)
+                    <a href="{{ $f->url() }}" target="_blank" class="block overflow-hidden rounded-lg border border-pwb-line bg-white">
+                        <img src="{{ $f->url() }}" loading="lazy" alt="Foto bukti {{ $loop->iteration }}" class="aspect-[4/3] w-full object-cover">
+                        <p class="px-2 py-1 text-[11px] text-slate-500">{{ $f->created_at->locale('id')->translatedFormat('d M Y, H.i') }}</p>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     @unless ($p->ttd_at)
         <div id="modal-ttd" class="no-print fixed inset-0 z-50 hidden items-end justify-center bg-black/50 p-3 sm:items-center">
             <form method="POST" action="{{ $urlTtd }}" onsubmit="return kirimTtd()" class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
