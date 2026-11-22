@@ -304,6 +304,9 @@ class AdminApiController extends Controller
                     ? $p->surat_jalan_wa_status.($p->surat_jalan_wa_at ? ' · '.$p->surat_jalan_wa_at->locale('id')->translatedFormat('j M Y, H.i') : '')
                     : null,
                 'surat_jalan_wa_ok'  => $p->surat_jalan_wa_at !== null,
+                'ttd_penerima'       => $p->ttd_at
+                    ? $p->ttd_nama.' · '.$p->ttd_at->locale('id')->translatedFormat('j M Y, H.i')
+                    : null,
                 'laporan_dikirim'   => $p->laporan_dikirim_at
                     ? $p->laporan_dikirim_at->locale('id')->translatedFormat('j M Y, H.i').' ke '.$p->laporan_dikirim_ke
                     : null,

@@ -86,7 +86,10 @@ class CheckerApiController extends Controller
                 'no_resi'           => $p->no_resi,
                 'status'            => $p->status,
                 'status_label'      => $p->status_label,
-                'muatan'            => $p->muatan,
+                // Ringkas & berisi jumlah ("500 sak Semen …") supaya checker tahu berapa yang dimuat
+                'muatan'            => \App\Support\SuratJalan::ringkasMuatan($p),
+                'barang'            => \App\Support\SuratJalan::barangUntukApp($p),
+                'penjual'           => $p->penjual,
                 'perusahaan_tujuan' => $p->pelanggan?->nama,
                 'tujuan'            => $p->tujuan,
             ] : null,

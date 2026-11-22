@@ -55,6 +55,22 @@
         @endif
     </div>
 
+    {{-- Pesan --}}
+    @if (session('success') || session('info') || $errors->any())
+        <div class="no-print mx-auto mt-4 max-w-4xl px-4">
+            <div class="rounded-lg px-4 py-3 text-sm font-semibold {{ $errors->any() ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700' }}">
+                {{ $errors->any() ? $errors->first() : (session('success') ?? session('info')) }}
+            </div>
+        </div>
+    @endif
+    @if ($admin && $p->ttd_at)
+        <form method="POST" action="{{ route('suratJalan.ttd.hapus', $p) }}" class="no-print mx-auto mt-3 max-w-4xl px-4 text-right"
+              onsubmit="return confirm('Hapus tanda tangan penerima? Pelanggan perlu menandatangani ulang.')">
+            @csrf @method('DELETE')
+            <button class="text-xs font-bold text-red-600 hover:underline"><i class="fa-solid fa-eraser mr-1"></i>Hapus tanda tangan penerima</button>
+        </form>
+    @endif
+
     <div id="wadah" class="mx-auto my-6 max-w-4xl overflow-hidden px-4 print:m-0 print:p-0">
         <div id="bingkai">
             <div id="kertas" class="mx-auto bg-white p-10 shadow-sm">
@@ -82,6 +98,8 @@
                             'Tgl. Surat Jalan' => ($p->tanggal_kirim ?? now())->locale('id')->translatedFormat('d F Y'),
                             'No. Resi'         => $p->no_resi,
                             'Penjual'          => $p->penjual ?: '-',
+                            'Sopir'            => $p->truck?->supir?->nama ?? '-',
+                            'Plat Mobil'       => $p->truck?->plat ?? '-',
                         ] as $k => $v)
                             <tr>
                                 <td class="w-32 py-0.5 align-top text-slate-500">{{ $k }}</td>
@@ -115,25 +133,97 @@
                     </tbody>
                 </table>
 
-                {{-- Sopir & plat --}}
-                <table class="mt-4 text-sm">
-                    <tr><td class="w-32 py-0.5 text-slate-500">Sopir</td><td class="py-0.5 font-semibold">: {{ $p->truck?->supir?->nama ?? '-' }}</td></tr>
-                    <tr><td class="w-32 py-0.5 text-slate-500">Plat Mobil</td><td class="py-0.5 font-semibold">: {{ $p->truck?->plat ?? '-' }}</td></tr>
-                </table>
-
-                {{-- Tanda tangan --}}
-                <section class="mt-10 grid grid-cols-3 gap-8 text-center text-sm">
-                    @foreach (['Hormat kami,' => 'PT Putra Wijaya Berjaya', 'Sopir,' => $p->truck?->supir?->nama, 'Penerima,' => null] as $atas => $bawah)
-                        <div>
-                            <p class="text-slate-500">{{ $atas }}</p>
-                            <div class="h-20"></div>
-                            <p class="border-t border-slate-400 pt-1 text-xs font-semibold">{{ $bawah ?: '(.........................)' }}</p>
+                {{-- Tanda tangan penerima (bisa online) --}}
+                <section class="mt-10 flex justify-end text-center text-sm">
+                    <div class="w-64">
+                        <p class="text-slate-500">Penerima,</p>
+                        <div class="flex h-24 items-end justify-center">
+                            @if ($p->ttd_at)
+                                <img src="{{ $p->ttd_gambar }}" alt="Tanda tangan {{ $p->ttd_nama }}" class="max-h-24 max-w-full">
+                            @else
+                                <button type="button" onclick="bukaTtd()" class="no-print mb-3 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-bold text-white shadow hover:bg-green-700">
+                                    <i class="fa-solid fa-signature mr-1"></i> Tanda Tangani
+                                </button>
+                            @endif
                         </div>
-                    @endforeach
+                        <p class="border-t border-slate-400 pt-1 text-xs font-semibold">{{ $p->ttd_nama ?: '(.........................)' }}</p>
+                        @if ($p->ttd_at)
+                            <p class="mt-0.5 text-[10px] text-slate-500">Ditandatangani online {{ $p->ttd_at->locale('id')->translatedFormat('d M Y, H.i') }} WIB</p>
+                        @endif
+                    </div>
                 </section>
             </div>
         </div>
     </div>
+
+    @unless ($p->ttd_at)
+        <div id="modal-ttd" class="no-print fixed inset-0 z-50 hidden items-end justify-center bg-black/50 p-3 sm:items-center">
+            <form method="POST" action="{{ $urlTtd }}" onsubmit="return kirimTtd()" class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
+                <h2 class="text-lg font-extrabold text-pwb-navy"><i class="fa-solid fa-signature mr-1"></i> Tanda Tangan Penerima</h2>
+                <p class="mb-4 text-xs text-slate-500">Tanda tangani setelah barang diterima dan diperiksa.</p>
+
+                <label for="nama-ttd" class="mb-1 block text-sm font-bold text-pwb-navy">Nama penerima</label>
+                <input id="nama-ttd" name="nama" required maxlength="100" value="{{ old('nama') }}" placeholder="Nama lengkap"
+                       class="w-full rounded-lg border border-pwb-line px-4 py-3 text-sm outline-none focus:border-pwb-blue">
+
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-sm font-bold text-pwb-navy">Tanda tangan</span>
+                    <button type="button" onclick="ulangTtd()" class="text-xs font-bold text-pwb-blue"><i class="fa-solid fa-rotate-left mr-1"></i>Ulangi</button>
+                </div>
+                <canvas id="kanvas-ttd" class="mt-1 h-48 w-full touch-none rounded-lg border-2 border-dashed border-pwb-line bg-slate-50"></canvas>
+                <p class="mt-1 text-center text-[11px] text-slate-400">Gores dengan jari / mouse di kotak di atas</p>
+                <input type="hidden" name="ttd" id="isi-ttd">
+                <p id="galat-ttd" class="mt-2 hidden text-xs font-semibold text-red-600">Silakan buat tanda tangan dulu.</p>
+
+                <div class="mt-5 flex gap-2">
+                    <button type="button" onclick="tutupTtd()" class="flex-1 rounded-lg border border-pwb-line px-4 py-3 text-sm font-bold text-pwb-navy">Batal</button>
+                    <button type="submit" id="tombol-ttd" class="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-bold text-white hover:bg-green-700">Simpan Tanda Tangan</button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            (function () {
+                var modal = document.getElementById('modal-ttd');
+                var kanvas = document.getElementById('kanvas-ttd');
+                var ctx = kanvas.getContext('2d');
+                var ada = false, gambar = false, akhir = null;
+
+                function siapkan() {
+                    var r = kanvas.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+                    kanvas.width = r.width * d; kanvas.height = r.height * d;
+                    ctx.setTransform(d, 0, 0, d, 0, 0);
+                    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#12285C';
+                    ada = false;
+                }
+                function titik(e) { var r = kanvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+
+                kanvas.addEventListener('pointerdown', function (e) { gambar = true; akhir = titik(e); kanvas.setPointerCapture(e.pointerId); e.preventDefault(); });
+                kanvas.addEventListener('pointermove', function (e) {
+                    if (!gambar) return;
+                    var t = titik(e);
+                    ctx.beginPath(); ctx.moveTo(akhir.x, akhir.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+                    akhir = t; ada = true; e.preventDefault();
+                });
+                ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { kanvas.addEventListener(n, function () { gambar = false; }); });
+
+                window.bukaTtd = function () {
+                    modal.classList.remove('hidden'); modal.classList.add('flex');
+                    siapkan();
+                    document.getElementById('nama-ttd').focus();
+                };
+                window.tutupTtd = function () { modal.classList.add('hidden'); modal.classList.remove('flex'); };
+                window.ulangTtd = function () { siapkan(); };
+                window.kirimTtd = function () {
+                    if (!ada) { document.getElementById('galat-ttd').classList.remove('hidden'); return false; }
+                    document.getElementById('isi-ttd').value = kanvas.toDataURL('image/png');
+                    var b = document.getElementById('tombol-ttd'); b.disabled = true; b.textContent = 'Menyimpan…';
+                    return true;
+                };
+                @if ($errors->any()) window.bukaTtd(); @endif
+            })();
+        </script>
+    @endunless
 
     <script>
         // Tampilan HP: perkecil kertas A4 supaya muat di layar (cetak tetap ukuran penuh)

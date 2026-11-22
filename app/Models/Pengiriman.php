@@ -30,6 +30,9 @@ class Pengiriman extends Model
         'penjual', 'barang',
     ];
 
+    /** Gambar tanda tangan besar: jangan ikut ke JSON bawaan. */
+    protected $hidden = ['ttd_gambar'];
+
     protected $casts = [
         'tanggal_kirim' => 'date',
         'estimasi_tiba' => 'date',
@@ -41,6 +44,7 @@ class Pengiriman extends Model
         'laporan_dikirim_at'  => 'datetime',
         'surat_jalan_wa_at'   => 'datetime',
         'barang'              => 'array',
+        'ttd_at'              => 'datetime',
     ];
 
     // status => [label, warna badge]

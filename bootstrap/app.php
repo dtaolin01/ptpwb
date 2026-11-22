@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Belum login -> arahkan ke /admin, sudah login -> ke dashboard admin
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        // Tanda tangan surat jalan dilindungi link bertanda tangan (pelanggan bisa membuka link berhari-hari kemudian)
+        $middleware->validateCsrfTokens(except: ['surat-jalan/*/tanda-tangan']);
         $middleware->redirectUsersTo(fn () => route('dashboard'));
 
         $middleware->alias([

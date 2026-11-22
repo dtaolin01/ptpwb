@@ -57,6 +57,35 @@ class SuratJalan
         return $p->barang ?: [['nama' => $p->muatan, 'kode' => null, 'qty' => null, 'satuan' => null]];
     }
 
+    /** "500 sak Semen Conch 50kg, 2,5 ton Besi 10mm" — untuk aplikasi checker & notifikasi. */
+    public static function ringkasMuatan(Pengiriman $p): string
+    {
+        if (! $p->barang) {
+            return (string) $p->muatan;
+        }
+
+        return collect($p->barang)->map(function ($b) {
+            $jumlah = trim(self::angka($b['qty'] ?? null).' '.($b['satuan'] ?? ''));
+
+            return trim($jumlah.' '.$b['nama']);
+        })->implode(', ');
+    }
+
+    /** Untuk aplikasi checker: daftar barang dengan jumlah siap tampil. */
+    public static function barangUntukApp(Pengiriman $p): array
+    {
+        return collect(self::barang($p))->map(fn ($b) => [
+            'nama'   => $b['nama'],
+            'kode'   => $b['kode'] ?? null,
+            'jumlah' => trim(self::angka($b['qty'] ?? null).' '.($b['satuan'] ?? '')) ?: null,
+        ])->values()->all();
+    }
+
+    public static function linkTandaTangan(Pengiriman $p): string
+    {
+        return url(URL::signedRoute('suratJalan.ttd', ['pengiriman' => $p->id], null, false));
+    }
+
     /** 25.0 → "25", 2.5 → "2,5" */
     public static function angka($qty): string
     {
@@ -103,7 +132,7 @@ class SuratJalan
         }
         array_push($baris,
             '',
-            'Lihat / cetak surat jalan:',
+            'Lihat & tanda tangani surat jalan saat barang diterima:',
             self::link($p),
             '',
             'Lacak posisi truk secara langsung:',
