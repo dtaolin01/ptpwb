@@ -32,7 +32,7 @@ class PabrikController extends Controller
             'nama'          => 'nama pabrik',
             'radius_pabrik' => 'radius area pabrik',
             'radius_tujuan' => 'radius area tujuan',
-            'jarak_dekat'   => 'jarak pemantauan rapat',
+            'jarak_dekat'   => 'jarak mendekati pabrik',
         ]);
 
         // Titik belum dipilih di peta → cari dari alamat

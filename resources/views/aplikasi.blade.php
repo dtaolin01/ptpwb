@@ -51,8 +51,8 @@
         @csrf
         <h2 class="mb-1 font-bold text-pwb-navy"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>Unggah Versi Baru</h2>
         <p class="mb-5 text-xs text-slate-500">
-            Version code &amp; version name diambil dari <code>build.gradle</code> (<code>versionCode</code>, <code>versionName</code>).
-            Version code <b>harus lebih besar</b> dari versi sebelumnya, dan APK harus ditandatangani dengan <b>keystore yang sama</b>.
+            Cukup pilih aplikasi dan file APK; versi dibaca otomatis dari APK.
+            Sebelum build, naikkan <code>versionCode</code> di <code>build.gradle</code> dan pakai <b>keystore yang sama</b>.
         </p>
 
         <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
