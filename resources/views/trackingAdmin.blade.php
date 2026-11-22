@@ -34,21 +34,23 @@
                 <h2 class="flex items-center gap-3 font-bold text-pwb-navy">
                     <i class="fa-solid fa-cube text-lg"></i> Detail Pengiriman
                 </h2>
-                <div class="flex flex-wrap items-center gap-2">
-                    <x-badge :warna="$detail['warna']">{{ $detail['status'] }}</x-badge>
-                    <a href="{{ route('trackingAdmin.laporan', $pengiriman) }}" target="_blank"
-                       class="inline-flex items-center gap-2 rounded-lg {{ $pengiriman->status === 'terkirim' ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-500 hover:bg-slate-600' }} px-3 py-1.5 text-xs font-bold text-white">
-                        <i class="fa-solid fa-file-lines"></i> Laporan
-                    </a>
-                    <a href="{{ route('trackingAdmin.laporanPelanggan', $pengiriman) }}" target="_blank" title="Laporan PDF untuk dikirim ke pelanggan"
-                       class="inline-flex items-center gap-2 rounded-lg {{ $pengiriman->status === 'terkirim' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-slate-500 hover:bg-slate-600' }} px-3 py-1.5 text-xs font-bold text-white">
-                        <i class="fa-solid fa-paper-plane"></i> Kirim ke Pelanggan
-                    </a>
-                    <a href="{{ route('trackingAdmin.edit', $pengiriman) }}"
-                       class="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800">
-                        <i class="fa-solid fa-pen"></i> Ubah
-                    </a>
-                </div>
+                <x-badge :warna="$detail['warna']">{{ $detail['status'] }}</x-badge>
+            </div>
+
+            {{-- Aksi: Ubah selalu ada; laporan aktif penuh setelah pengiriman selesai --}}
+            <div class="mt-4 flex flex-col gap-2 border-b border-pwb-line pb-4 sm:flex-row sm:flex-wrap">
+                <a href="{{ route('trackingAdmin.edit', $pengiriman) }}"
+                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg sm:flex-1 bg-pwb-blue px-3 py-2 text-xs font-bold text-white hover:bg-blue-700">
+                    <i class="fa-solid fa-pen"></i> Ubah Pengiriman
+                </a>
+                <a href="{{ route('trackingAdmin.laporan', $pengiriman) }}" target="_blank"
+                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg sm:flex-1 border border-pwb-line bg-white px-3 py-2 text-xs font-bold text-pwb-navy hover:bg-pwb-bg">
+                    <i class="fa-solid fa-file-lines"></i> Laporan Internal
+                </a>
+                <a href="{{ route('trackingAdmin.laporanPelanggan', $pengiriman) }}" target="_blank" title="Laporan PDF untuk dikirim ke pelanggan"
+                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg sm:flex-1 px-3 py-2 text-xs font-bold {{ $pengiriman->status === 'terkirim' ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'border border-pwb-line bg-white text-pwb-navy hover:bg-pwb-bg' }}">
+                    <i class="fa-solid fa-paper-plane"></i> Kirim ke Pelanggan
+                </a>
             </div>
 
             <dl class="mt-5 space-y-4 text-sm">

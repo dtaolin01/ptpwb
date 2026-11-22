@@ -6,19 +6,19 @@
 
 @section('content')
     {{-- Kartu statistik --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         @foreach ($stats as $s)
-            <div class="rounded-xl border border-pwb-line bg-white p-5">
-                <div class="flex items-center gap-4">
-                    <span class="flex h-14 w-14 items-center justify-center rounded-full text-xl {{ $s['warna'] }}">
+            <div class="rounded-xl border border-pwb-line bg-white p-4 sm:p-5">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg sm:h-14 sm:w-14 sm:text-xl {{ $s['warna'] }}">
                         <i class="fa-solid {{ $s['ikon'] }}"></i>
                     </span>
                     <div>
                         <p class="text-sm font-bold">{{ $s['label'] }}</p>
-                        <p class="text-3xl font-extrabold text-pwb-navy">{{ $s['nilai'] }}</p>
+                        <p class="text-2xl font-extrabold text-pwb-navy sm:text-3xl">{{ $s['nilai'] }}</p>
                     </div>
                 </div>
-                <p class="mt-5 text-xs text-slate-500">
+                <p class="mt-3 text-xs text-slate-500 sm:mt-5">
                     <span class="font-bold {{ $s['turun'] ? 'text-red-600' : 'text-green-600' }}">{{ $s['turun'] ? '↓' : '↑' }} {{ $s['naik'] }}</span> dari bulan lalu
                 </p>
             </div>

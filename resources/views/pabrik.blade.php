@@ -61,10 +61,10 @@
                     {!! $err('radius_tujuan') !!}
                 </div>
                 <div>
-                    <label for="jarak_dekat" class="{{ $label }}">Pantau tiap 15 menit dalam (km)</label>
+                    <label for="jarak_dekat" class="{{ $label }}">Jarak "mendekati pabrik" (km)</label>
                     <input id="jarak_dekat" type="number" step="0.5" min="1" max="50" name="jarak_dekat" value="{{ old('jarak_dekat', $pabrik['jarak_dekat']) }}" class="{{ $input }}">
                     {!! $err('jarak_dekat') !!}
-                    <p class="mt-1 text-[11px] text-slate-500">Di luar jarak ini lokasi dikirim tiap 30 menit.</p>
+                    <p class="mt-1 text-[11px] text-slate-500">Truk dalam jarak ini tampil sebagai "Mendekati" di aplikasi Checker.</p>
                 </div>
             </div>
         </div>

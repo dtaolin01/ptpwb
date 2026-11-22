@@ -22,6 +22,30 @@
     <style>
         .hp-isi { display: contents; }   /* laptop: tidak mengubah apa pun */
 
+        /* ===================== Kerapian umum ===================== */
+        /* Semua kartu putih punya garis tepi & bayangan tipis yang sama */
+        main .rounded-xl.bg-white { border: 1px solid #E3E9F3; box-shadow: 0 1px 2px rgba(18, 40, 92, .05); }
+        /* Kolom isian seragam: sudut, tinggi & warna fokus */
+        main input:not([type=checkbox]):not([type=radio]):not([type=file]):focus,
+        main select:focus, main textarea:focus {
+            outline: none; border-color: #2563EB !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+        }
+        main form.flex.overflow-hidden:focus-within { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, .15); }
+        main form.flex.overflow-hidden input:focus { box-shadow: none; }
+
+        /* ===================== Tampilan laptop / tablet ===================== */
+        @media (min-width: 768px) {
+            /* Tabel: judul kolom kecil kapital, baris berganti warna saat disorot */
+            main table thead th {
+                background: #F6F8FC; color: #5B6B8C; font-size: 11.5px; font-weight: 700;
+                text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+            }
+            main table thead tr { background: transparent !important; }
+            main table tbody tr { transition: background-color .12s; }
+            main table tbody tr:hover { background: #F8FAFE; }
+            main table td { vertical-align: middle; }
+        }
+
         /* ===================== Tampilan HP (layar < 768px) ===================== */
         @media (max-width: 767px) {
             /* Huruf lebih besar & mudah dibaca */
@@ -71,7 +95,7 @@
             /* baris pertama yang terlihat (mis. nama/resi) jadi judul kartu */
             table.tabel-hp tbody > tr > td.hp-judul { font-size: 17px; font-weight: 800; color: #12285C; }
             table.tabel-hp tbody > tr > td.hp-judul::before { content: none; }
-            .overflow-x-auto:has(> table.tabel-hp) { background: transparent; overflow: visible; }
+            .overflow-x-auto:has(> table.tabel-hp) { background: transparent; overflow: visible; border: 0 !important; box-shadow: none !important; }
 
             /* Tabel berisi isian (mis. Status Perjalanan): tetap tabel, geser ke samping */
             .overflow-x-auto > table:not(.tabel-hp) { min-width: 680px; }

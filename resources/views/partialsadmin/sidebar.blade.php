@@ -33,7 +33,7 @@
         </button>
     </div>
 
-    <nav class="mt-10 min-h-0 flex-1 space-y-2 overflow-y-auto px-3 lg:mt-12">
+    <nav class="mt-10 min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pb-20 lg:mt-12">
         @foreach ($menus as [$label, $route, $ikon, $aktif])
             <a href="{{ route($route) }}"
                class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm {{ request()->routeIs(...$aktif) ? 'bg-pwb-blue font-bold' : 'font-medium hover:bg-white/10' }}">
@@ -48,13 +48,6 @@
             </a>
         @endforeach
     </nav>
-
-    <form method="POST" action="{{ route('admin.logout') }}" onsubmit="return confirm('Keluar dari dashboard admin?')" class="relative z-10 px-7 pb-8 pt-4">
-        @csrf
-        <button type="submit" class="flex items-center gap-4 text-sm hover:text-white/80">
-            <i class="fa-solid fa-right-from-bracket w-5 text-center text-base"></i> Logout
-        </button>
-    </form>
 
     {{-- Hiasan segitiga merah di pojok bawah --}}
     <div class="absolute bottom-0 right-0 h-16 w-32 bg-pwb-red" style="clip-path: polygon(100% 0, 100% 100%, 0 100%)"></div>
