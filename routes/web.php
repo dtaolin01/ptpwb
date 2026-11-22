@@ -13,6 +13,7 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PesanController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SupirController;
+use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BuktiFotoController;
 use App\Http\Controllers\SuratJalanController;
 use App\Http\Controllers\TrackingAdminController;
@@ -125,6 +126,13 @@ Route::middleware(['auth', 'disetujui'])->group(function () {
     });
 
     // Akun petugas pabrik untuk aplikasi PWB Checker
+    Route::controller(BarangController::class)->prefix('barang')->group(function () {
+        Route::get('/', 'index')->name('barang');
+        Route::post('/', 'store')->name('barang.store');
+        Route::put('/{barang}', 'update')->name('barang.update');
+        Route::delete('/{barang}', 'destroy')->name('barang.destroy');
+    });
+
     Route::controller(CheckerController::class)->prefix('checker')->group(function () {
         Route::get('/', 'index')->name('checker');
         Route::get('/create', 'create')->name('checker.create');

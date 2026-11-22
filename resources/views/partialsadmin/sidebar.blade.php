@@ -7,6 +7,7 @@
         ['Truck & Supir', 'truck',         'fa-truck',        ['truck', 'truck.*', 'supir', 'supir.*']],
         ['Pelanggan',     'pelanggan',     'fa-users',        ['pelanggan', 'pelanggan.*']],
         ['Lokasi Pabrik', 'pabrik',        'fa-industry',     ['pabrik', 'pabrik.*']],
+        ['Data Barang',   'barang',        'fa-boxes-stacked', ['barang', 'barang.*']],
         ['Checker',       'checker',       'fa-user-check',   ['checker', 'checker.*']],
         ['Update Aplikasi','aplikasi',     'fa-mobile-screen-button', ['aplikasi', 'aplikasi.*']],
         ['WhatsApp Otomatis', 'whatsapp',  'fa-brands fa-whatsapp', ['whatsapp', 'whatsapp.*']],
