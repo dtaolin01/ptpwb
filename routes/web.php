@@ -35,6 +35,8 @@ Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
 // Surat jalan dibuka pelanggan dari link WhatsApp (link bertanda tangan, tanpa login)
 Route::get('/surat-jalan/{pengiriman}', [SuratJalanController::class, 'publik'])
     ->middleware('signed:relative')->name('suratJalan.publik');
+Route::post('/surat-jalan/{pengiriman}/tanda-tangan', [SuratJalanController::class, 'tandaTangan'])
+    ->middleware(['signed:relative', 'throttle:10,1'])->name('suratJalan.ttd');
 
 // Laporan untuk pelanggan dibuka dari aplikasi PWB Admin (link bertanda tangan, berlaku 2 jam, tanpa login)
 Route::get('/laporan-pelanggan/{pengiriman}', [TrackingAdminController::class, 'laporanPelangganAkses'])
@@ -66,6 +68,7 @@ Route::middleware(['auth', 'disetujui'])->group(function () {
     // Peta semua truk (lokasi terakhir dari aplikasi supir)
     Route::get('/trackingAdmin/{pengiriman}/surat-jalan', [SuratJalanController::class, 'lihat'])->name('suratJalan');
     Route::post('/trackingAdmin/{pengiriman}/surat-jalan/kirim', [SuratJalanController::class, 'kirim'])->name('suratJalan.kirim');
+    Route::delete('/trackingAdmin/{pengiriman}/surat-jalan/tanda-tangan', [SuratJalanController::class, 'hapusTandaTangan'])->name('suratJalan.ttd.hapus');
 
     Route::get('/whatsapp', [WhatsAppController::class, 'edit'])->name('whatsapp');
     Route::put('/whatsapp', [WhatsAppController::class, 'update'])->name('whatsapp.update');

@@ -71,6 +71,9 @@ class DeteksiPabrik
         if (! $jenis) {
             return null;
         }
+        if ($p && $jenis !== 'keluar') {
+            $pesan = mb_substr($pesan.' Muatan: '.SuratJalan::ringkasMuatan($p), 0, 250);
+        }
 
         return NotifikasiPabrik::create([
             'jenis'         => $jenis,

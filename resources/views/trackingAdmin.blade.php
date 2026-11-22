@@ -74,6 +74,10 @@
                         Surat jalan belum dikirim lewat WhatsApp.
                     @endif
                 </p>
+                <p class="w-full text-[11px] {{ $pengiriman->ttd_at ? 'font-bold text-green-700' : 'text-slate-500' }}">
+                    <i class="fa-solid fa-signature"></i>
+                    {{ $pengiriman->ttd_at ? 'Ditandatangani penerima: '.$pengiriman->ttd_nama.' · '.$pengiriman->ttd_at->format('d/m H.i') : 'Belum ditandatangani penerima.' }}
+                </p>
             </div>
 
             <dl class="mt-5 space-y-4 text-sm">
