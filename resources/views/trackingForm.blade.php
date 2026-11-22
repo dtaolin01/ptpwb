@@ -98,8 +98,8 @@
                 </div>
 
                 <div>
-                    <label for="muatan" class="{{ $label }}">Jenis Muatan</label>
-                    <input id="muatan" name="muatan" value="{{ $v('muatan') }}" placeholder="Contoh: Semen Conch 50kg (25 ton)" class="{{ $input }}">
+                    <label for="muatan" class="{{ $label }}">Jenis Muatan <span class="font-normal text-slate-400">(boleh kosong bila daftar barang diisi)</span></label>
+                    <input id="muatan" name="muatan" value="{{ $v('muatan') }}" placeholder="Contoh: Semen Conch 50kg" class="{{ $input }}">
                     {!! $err('muatan') !!}
                 </div>
 
@@ -125,6 +125,50 @@
                     {!! $err('status') !!}
                 </div>
             </div>
+        </div>
+
+        {{-- Isian surat jalan --}}
+        @php
+            $barang = old('barang', $pengiriman->barang ?? []);
+            if (! $barang) $barang = [['nama' => '', 'kode' => '', 'qty' => '', 'satuan' => '']];
+        @endphp
+        <div class="rounded-xl border border-pwb-line bg-white p-6">
+            <h2 class="mb-1 font-bold text-pwb-navy"><i class="fa-solid fa-file-lines mr-2"></i>Surat Jalan</h2>
+            <p class="mb-4 text-xs text-slate-500">Dicetak di surat jalan dan dikirim ke WhatsApp pelanggan. Sopir & plat diambil dari armada yang dipilih.</p>
+
+            <div class="max-w-md">
+                <label for="penjual" class="{{ $label }}">Penjual</label>
+                <input id="penjual" name="penjual" value="{{ old('penjual', $pengiriman->penjual) }}" placeholder="Contoh: PT Semen Conch" class="{{ $input }}">
+                {!! $err('penjual') !!}
+            </div>
+
+            <p class="{{ $label }} mt-5">Daftar Barang</p>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[640px] text-sm">
+                    <thead class="text-left text-xs text-slate-500">
+                        <tr><th class="w-8 pb-2">No</th><th class="pb-2">Nama barang</th><th class="w-40 pb-2">Kode barang</th><th class="w-28 pb-2">Qty</th><th class="w-32 pb-2">Satuan</th><th class="w-10"></th></tr>
+                    </thead>
+                    <tbody id="daftar-barang">
+                        @foreach ($barang as $i => $b)
+                            <tr class="baris-barang">
+                                <td class="no py-1 pr-2 text-xs text-slate-500">{{ $loop->iteration }}</td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][nama]" value="{{ $b['nama'] ?? '' }}" placeholder="Semen Conch 50kg" class="{{ $kecil }}"></td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][kode]" value="{{ $b['kode'] ?? '' }}" placeholder="SMN-50" class="{{ $kecil }}"></td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][qty]" value="{{ $b['qty'] ?? '' }}" inputmode="decimal" placeholder="500" class="{{ $kecil }}"></td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][satuan]" value="{{ $b['satuan'] ?? '' }}" list="pilihan-satuan" placeholder="sak" class="{{ $kecil }}"></td>
+                                <td class="py-1"><button type="button" class="hapus-barang rounded-md px-2 py-1 text-red-600 hover:bg-red-50" title="Hapus baris"><i class="fa-solid fa-xmark"></i></button></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <datalist id="pilihan-satuan">
+                @foreach (['sak', 'zak', 'ton', 'kg', 'pcs', 'unit', 'batang', 'lembar', 'dus', 'm³', 'rit', 'liter'] as $s)<option value="{{ $s }}">@endforeach
+            </datalist>
+            @foreach ($errors->get('barang.*') as $pesan) <p class="mt-1 text-xs text-red-600">{{ $pesan[0] }}</p> @break @endforeach
+            <button type="button" id="tambah-barang" class="mt-3 rounded-lg border border-pwb-line px-4 py-2 text-xs font-bold text-pwb-navy hover:bg-pwb-bg">
+                <i class="fa-solid fa-plus mr-1"></i> Tambah barang
+            </button>
         </div>
 
         {{-- 2. Peta --}}
@@ -255,6 +299,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script src="{{ asset('js/admin-tracking-form.js') }}?v={{ filemtime(public_path('js/admin-tracking-form.js')) }}"></script>
     <script>
+    // Daftar barang surat jalan: tambah / hapus baris
+    document.addEventListener('DOMContentLoaded', function () {
+        var tbody = document.getElementById('daftar-barang');
+        function nomori() {
+            tbody.querySelectorAll('tr.baris-barang').forEach(function (tr, i) {
+                tr.querySelector('.no').textContent = i + 1;
+                tr.querySelectorAll('input').forEach(function (inp) { inp.name = inp.name.replace(/barang\[\d+\]/, 'barang[' + i + ']'); });
+            });
+        }
+        document.getElementById('tambah-barang').addEventListener('click', function () {
+            var baru = tbody.querySelector('tr.baris-barang').cloneNode(true);
+            baru.querySelectorAll('input').forEach(function (inp) { inp.value = ''; });
+            tbody.appendChild(baru);
+            nomori();
+            baru.querySelector('input').focus();
+        });
+        tbody.addEventListener('click', function (e) {
+            var tombol = e.target.closest('.hapus-barang');
+            if (!tombol) return;
+            var tr = tombol.closest('tr');
+            if (tbody.querySelectorAll('tr.baris-barang').length > 1) tr.remove();
+            else tr.querySelectorAll('input').forEach(function (inp) { inp.value = ''; });
+            nomori();
+        });
+    });
+
     // Rute dalam kota → sembunyikan langkah pabrik yang belum dilewati (tidak ikut disimpan)
     document.addEventListener('DOMContentLoaded', function () {
         var langkahPabrik = @json(\App\Models\Pengiriman::LANGKAH_PABRIK);

@@ -33,7 +33,7 @@ class SuratJalanController extends Controller
 
         return view('suratJalan', [
             'p'        => $p,
-            'nomor'    => SuratJalan::nomor($p),
+            'barang'   => SuratJalan::barang($p),
             'tracking' => route('tracking', ['resi' => $p->no_resi]),
             'admin'    => $admin,
         ]);
