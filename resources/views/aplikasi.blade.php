@@ -2,7 +2,7 @@
 
 @section('page_title', 'Update Aplikasi')
 @section('title', 'Update Aplikasi')
-@section('subtitle', 'Unggah APK versi baru. Aplikasi Supir & Checker di HP memperbarui dirinya sendiri saat dibuka.')
+@section('subtitle', 'Unggah APK versi baru. Aplikasi Supir, Checker & Admin di HP memperbarui dirinya sendiri saat dibuka.')
 
 @section('content')
     @php
@@ -12,13 +12,13 @@
     @endphp
 
     {{-- Versi terbaru + link pemasangan pertama --}}
-    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         @foreach ($daftar as $kode => $nama)
             @php $v = $terbaru[$kode]; $link = route('unduh.aplikasi', $kode); @endphp
             <div class="rounded-xl border border-pwb-line bg-white p-5">
                 <div class="flex items-center gap-3">
                     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-pwb-navy text-white">
-                        <i class="fa-solid {{ $kode === 'supir' ? 'fa-truck' : 'fa-user-check' }}"></i>
+                        <i class="fa-solid {{ ['supir' => 'fa-truck', 'checker' => 'fa-user-check', 'admin' => 'fa-user-tie'][$kode] ?? 'fa-mobile' }}"></i>
                     </span>
                     <div>
                         <h2 class="font-bold text-pwb-navy">{{ $nama }}</h2>
@@ -33,7 +33,7 @@
                 </div>
 
                 @if ($v)
-                    <p class="mt-4 text-xs font-bold text-pwb-navy">Link pemasangan pertama (kirim ke HP {{ $kode === 'supir' ? 'supir' : 'checker' }}):</p>
+                    <p class="mt-4 text-xs font-bold text-pwb-navy">Link pemasangan pertama (kirim ke HP {{ ['supir' => 'supir', 'checker' => 'checker', 'admin' => 'admin'][$kode] ?? $kode }}):</p>
                     <div class="mt-1 flex gap-2">
                         <input readonly value="{{ $link }}" class="min-w-0 flex-1 rounded-lg border border-pwb-line bg-slate-50 px-3 py-2 text-xs" onclick="this.select()">
                         <button type="button" class="salin rounded-lg border border-pwb-line px-3 text-xs font-bold text-pwb-blue hover:bg-slate-50" data-link="{{ $link }}">

@@ -30,7 +30,7 @@ class PetaArmadaController extends Controller
         return response()->json($this->susun());
     }
 
-    private function susun(): array
+    public function susun(): array
     {
         $atur = Pabrik::data();
         $pabrik = Pabrik::titik();
@@ -87,7 +87,9 @@ class PetaArmadaController extends Controller
                 'waktu_relatif' => $waktu?->locale('id')->diffForHumans(),
                 'lama'        => $waktu ? $waktu->lt(now()->subMinutes(self::MENIT_LAMA)) : true,
                 'zona'        => $zona,
+                'status_kode' => $t->status,
                 'pesanan'     => $p ? [
+                    'id'        => $p->id,
                     'no_resi'   => $p->no_resi,
                     'status'    => $p->status_label,
                     'warna'     => $p->status_warna,

@@ -32,9 +32,13 @@
     <div class="sticky top-0 z-20 border-b border-pwb-line bg-white/95 backdrop-blur">
         <div class="mx-auto max-w-4xl px-4 py-3">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <a href="{{ route('trackingAdmin', ['resi' => $p->no_resi]) }}" class="text-sm font-bold text-pwb-navy hover:underline">
-                    <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Tracking
-                </a>
+                @if (empty($dariAplikasi))
+                    <a href="{{ route('trackingAdmin', ['resi' => $p->no_resi]) }}" class="text-sm font-bold text-pwb-navy hover:underline">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Tracking
+                    </a>
+                @else
+                    <span class="text-sm font-bold text-pwb-navy"><i class="fa-solid fa-mobile-screen mr-1"></i> Dibuka dari PWB Admin</span>
+                @endif
                 <div class="flex flex-wrap gap-2">
                     <button type="button" id="btn-unduh" class="tombol-aksi rounded-lg bg-pwb-navy px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-900 disabled:opacity-50">
                         <i class="fa-solid fa-file-arrow-down mr-1.5"></i>Unduh PDF
@@ -49,7 +53,7 @@
             </div>
 
             <p class="mt-2 text-xs text-slate-500">
-                <i class="fa-solid fa-lock mr-1"></i>Halaman ini hanya bisa dibuka admin. Pelanggan menerima file PDF-nya saja.
+                <i class="fa-solid fa-lock mr-1"></i>Halaman ini hanya bisa dibuka admin{{ empty($dariAplikasi) ? '' : ' (link sementara, berlaku 2 jam)' }}. Pelanggan menerima file PDF-nya saja.
                 <span id="info-kirim">
                     @if ($p->laporan_dikirim_at)
                         · Terakhir dikirim <b>{{ $p->laporan_dikirim_at->locale('id')->translatedFormat('d M Y, H.i') }}</b> ke <b>{{ $p->laporan_dikirim_ke }}</b>
@@ -255,7 +259,7 @@
     <script src="{{ asset('vendor/html2pdf/html2pdf.bundle.min.js') }}"></script>
     <script>
     (function () {
-        var URL_KIRIM = @json(route('trackingAdmin.kirimLaporan', $p));
+        var URL_KIRIM = @json($urlKirim ?? route('trackingAdmin.kirimLaporan', $p));
         var NAMA_PDF = @json($namaPdf);
         var NOMOR_WA = @json($wa);
         var RESI = @json($p->no_resi);

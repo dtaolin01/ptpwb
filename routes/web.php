@@ -30,8 +30,14 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware('thrott
 Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
 
 // Unduh APK aplikasi Android (pemasangan pertama & pembaruan otomatis)
+// Laporan untuk pelanggan dibuka dari aplikasi PWB Admin (link bertanda tangan, berlaku 2 jam, tanpa login)
+Route::get('/laporan-pelanggan/{pengiriman}', [TrackingAdminController::class, 'laporanPelangganAkses'])
+    ->middleware('signed:relative')->name('laporanPelanggan.akses');
+Route::post('/laporan-pelanggan/{pengiriman}/kirim', [TrackingAdminController::class, 'kirimLaporan'])
+    ->middleware(['signed:relative', 'throttle:20,1'])->name('laporanPelanggan.kirim');
+
 Route::get('/unduh/{aplikasi}/{id?}', [AplikasiController::class, 'unduh'])
-    ->whereIn('aplikasi', ['supir', 'checker'])->whereNumber('id')->name('unduh.aplikasi');
+    ->whereIn('aplikasi', ['supir', 'checker', 'admin'])->whereNumber('id')->name('unduh.aplikasi');
 
 /*
 |--------------------------------------------------------------------------

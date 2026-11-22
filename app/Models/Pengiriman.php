@@ -8,6 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pengiriman extends Model
 {
+    protected static function booted(): void
+    {
+        // Setiap status penting (masuk pabrik, berangkat, tiba, selesai) → notifikasi aplikasi PWB Admin
+        static::updated(function (Pengiriman $p) {
+            if ($p->wasChanged('status')) {
+                AdminNotifikasi::dariStatus($p);
+            }
+        });
+    }
+
     protected $table = 'pengiriman';
 
     protected $fillable = [

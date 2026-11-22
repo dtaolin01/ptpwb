@@ -12,7 +12,18 @@ class AplikasiVersi extends Model
     public const APLIKASI = [
         'supir'   => 'PWB Supir',
         'checker' => 'PWB Checker',
+        'admin'   => 'PWB Admin',
     ];
+
+    /** Jenis aplikasi dari nama package APK (com.pwb.app / com.pwb.checker / com.pwb.admin). */
+    public static function dariPackage(string $pkg): string
+    {
+        return match (true) {
+            str_contains($pkg, 'checker') => 'checker',
+            str_contains($pkg, 'admin')   => 'admin',
+            default                       => 'supir',
+        };
+    }
 
     protected $fillable = ['aplikasi', 'version_code', 'version_name', 'catatan', 'wajib', 'file', 'ukuran', 'sha256'];
 

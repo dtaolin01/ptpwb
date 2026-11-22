@@ -7,6 +7,20 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    protected static function booted(): void
+    {
+        // Pendaftaran lewat Sign Up → notifikasi untuk pemilik di aplikasi PWB Admin
+        static::created(function (User $u) {
+            if (! $u->disetujui) {
+                AdminNotifikasi::create([
+                    'jenis' => 'akun',
+                    'judul' => 'Pendaftaran akun admin baru',
+                    'isi'   => ($u->username ?: $u->email).' menunggu persetujuan Anda',
+                ]);
+            }
+        });
+    }
+
     use Notifiable;
 
     protected $fillable = [

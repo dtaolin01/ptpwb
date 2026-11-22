@@ -61,8 +61,7 @@ class AplikasiController extends Controller
         $apk = InfoApk::baca($file->getRealPath());
         if ($apk && $apk['version_code']) {
             $pkg = (string) $apk['package'];
-            $apkChecker = str_contains($pkg, 'checker');
-            if ($pkg !== '' && $apkChecker !== ($data['aplikasi'] === 'checker')) {
+            if ($pkg !== '' && AplikasiVersi::dariPackage($pkg) !== $data['aplikasi']) {
                 return back()->withInput()->withErrors(['file' =>
                     "APK ini adalah aplikasi {$pkg}, bukan ".AplikasiVersi::APLIKASI[$data['aplikasi']].'. Periksa pilihan aplikasi atau file APK-nya.']);
             }

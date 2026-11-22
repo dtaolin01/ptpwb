@@ -187,6 +187,21 @@ class TrackingAdminController extends Controller
         ]);
     }
 
+    /** Sama dengan laporanPelanggan(), tapi dibuka lewat link bertanda tangan dari aplikasi PWB Admin. */
+    public function laporanPelangganAkses(Pengiriman $pengiriman)
+    {
+        $pengiriman->loadMissing('pelanggan');
+
+        return view('laporanPelanggan', [
+            'p'        => $pengiriman,
+            'lap'      => LaporanPengiriman::untukPelanggan($pengiriman),
+            'namaPdf'  => LaporanPengirimanMail::namaFile($pengiriman),
+            'wa'       => self::nomorWa($pengiriman->pelanggan?->telepon),
+            'urlKirim' => \Illuminate\Support\Facades\URL::temporarySignedRoute('laporanPelanggan.kirim', now()->addHours(2), ['pengiriman' => $pengiriman->id], false),
+            'dariAplikasi' => true,
+        ]);
+    }
+
     /**
      * Kirim laporan ke pelanggan.
      *  - via=email    : PDF (dibuat di browser admin) dikirim sebagai lampiran email.
@@ -316,7 +331,7 @@ class TrackingAdminController extends Controller
      * - Tujuan : titik & kota perusahaan pelanggan (dicari dari alamatnya)
      * - Asal   : posisi terakhir truk dari aplikasi supir (atau saat lokasi pertama masuk)
      */
-    private function dataPengiriman(array $data): array
+    public function dataPengiriman(array $data): array
     {
         $kosong = fn ($titik) => ($data["{$titik}_lat"] ?? null) === null || ($data["{$titik}_lng"] ?? null) === null;
 
@@ -368,7 +383,7 @@ class TrackingAdminController extends Controller
     /**
      * Rute dalam kota: langkah "Menuju Pabrik" & "Sedang Muat di Pabrik" yang belum dilewati dihapus.
      */
-    private function rapikanLangkahRute(Pengiriman $p): void
+    public function rapikanLangkahRute(Pengiriman $p): void
     {
         if (! $p->lewat_pabrik) {
             $p->events()->whereIn('judul', Pengiriman::LANGKAH_PABRIK)->where('selesai', false)->delete();
@@ -379,7 +394,7 @@ class TrackingAdminController extends Controller
     /**
      * Ganti semua langkah perjalanan dengan isian form (urutan sesuai form).
      */
-    private function simpanLangkah(Pengiriman $p, array $events): void
+    public function simpanLangkah(Pengiriman $p, array $events): void
     {
         $p->events()->delete();
 
