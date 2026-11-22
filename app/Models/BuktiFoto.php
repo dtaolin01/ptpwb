@@ -10,7 +10,25 @@ class BuktiFoto extends Model
 {
     protected $table = 'bukti_foto';
 
-    protected $fillable = ['pengiriman_id', 'path', 'ukuran', 'lebar', 'tinggi', 'lat', 'lng'];
+    protected $fillable = ['pengiriman_id', 'path', 'ukuran', 'lebar', 'tinggi', 'lat', 'lng', 'waktu_foto', 'alamat', 'sumber_lokasi'];
+
+    protected $casts = ['waktu_foto' => 'datetime'];
+
+    /** Waktu foto diambil (foto lama sebelum fitur ini: waktu upload). */
+    public function waktu()
+    {
+        return ($this->waktu_foto ?? $this->created_at)?->copy()->setTimezone(config('app.timezone'));
+    }
+
+    public function waktuLabel(): ?string
+    {
+        return $this->waktu()?->locale('id')->translatedFormat('l, d M Y · H.i').' '.\App\Support\FotoBukti::zona();
+    }
+
+    public function linkPeta(): ?string
+    {
+        return $this->lat !== null ? 'https://www.google.com/maps?q='.$this->lat.','.$this->lng : null;
+    }
 
     protected static function booted(): void
     {
@@ -35,8 +53,12 @@ class BuktiFoto extends Model
             'id'          => $this->id,
             'url'         => $this->url(),
             'ukuran_kb'   => (int) round($this->ukuran / 1024),
-            'waktu'       => $this->created_at?->toIso8601String(),
-            'waktu_label' => $this->created_at?->locale('id')->translatedFormat('j M Y, H.i'),
+            'waktu'       => $this->waktu()?->toIso8601String(),
+            'waktu_label' => $this->waktuLabel(),
+            'alamat'      => $this->alamat,
+            'lat'         => $this->lat !== null ? (float) $this->lat : null,
+            'lng'         => $this->lng !== null ? (float) $this->lng : null,
+            'peta'        => $this->linkPeta(),
         ];
     }
 }
