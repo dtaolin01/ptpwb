@@ -47,20 +47,27 @@ class SuratJalanController extends Controller
             return back()->withErrors(['ttd' => 'Tanda tangan tidak terbaca, silakan ulangi.'])->withInput();
         }
 
-        $pengiriman->forceFill([
-            'ttd_nama'   => trim($data['nama']),
-            'ttd_gambar' => $data['ttd'],
-            'ttd_at'     => now(),
-            'ttd_ip'     => $request->ip(),
-        ])->saveQuietly();
+        try {
+            $pengiriman->forceFill([
+                'ttd_nama'   => trim($data['nama']),
+                'ttd_gambar' => $data['ttd'],
+                'ttd_at'     => now(),
+                'ttd_ip'     => $request->ip(),
+            ])->saveQuietly();
+        } catch (\Throwable $e) {
+            report($e);
 
-        AdminNotifikasi::create([
+            return back()->withInput($request->except('ttd'))
+                ->withErrors(['ttd' => 'Maaf, tanda tangan belum bisa disimpan. Silakan coba lagi nanti atau hubungi PT Putra Wijaya Berjaya.']);
+        }
+
+        rescue(fn () => AdminNotifikasi::create([
             'jenis'         => 'status',
             'judul'         => 'Surat jalan ditandatangani',
             'isi'           => $pengiriman->no_resi.' · diterima oleh '.trim($data['nama']),
             'pengiriman_id' => $pengiriman->id,
             'truck_id'      => $pengiriman->truck_id,
-        ]);
+        ]));
 
         return back()->with('success', 'Terima kasih, surat jalan sudah ditandatangani.');
     }
