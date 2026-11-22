@@ -70,6 +70,7 @@ Route::prefix('admin')->controller(AdminApiController::class)->group(function ()
         Route::post('/pengiriman', 'simpanPengiriman');
         Route::put('/pengiriman/{id}', 'ubahPengiriman')->whereNumber('id');
         Route::post('/pengiriman/{id}/selesai', 'selesaikanPengiriman')->whereNumber('id');
+        Route::post('/pengiriman/{id}/surat-jalan', 'kirimSuratJalan')->whereNumber('id');
         Route::delete('/pengiriman/{id}', 'hapusPengiriman')->whereNumber('id');
 
         foreach (['truk' => 'Truk', 'supir' => 'Supir', 'pelanggan' => 'Pelanggan', 'checker' => 'Checker'] as $url => $nama) {

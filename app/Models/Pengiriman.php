@@ -38,6 +38,7 @@ class Pengiriman extends Model
         'waktu_tiba_tujuan'   => 'datetime',
         'lewat_pabrik'        => 'boolean',
         'laporan_dikirim_at'  => 'datetime',
+        'surat_jalan_wa_at'   => 'datetime',
     ];
 
     // status => [label, warna badge]

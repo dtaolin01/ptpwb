@@ -13,7 +13,9 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PesanController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SupirController;
+use App\Http\Controllers\SuratJalanController;
 use App\Http\Controllers\TrackingAdminController;
+use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\TruckController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +32,10 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware('thrott
 Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
 
 // Unduh APK aplikasi Android (pemasangan pertama & pembaruan otomatis)
+// Surat jalan dibuka pelanggan dari link WhatsApp (link bertanda tangan, tanpa login)
+Route::get('/surat-jalan/{pengiriman}', [SuratJalanController::class, 'publik'])
+    ->middleware('signed:relative')->name('suratJalan.publik');
+
 // Laporan untuk pelanggan dibuka dari aplikasi PWB Admin (link bertanda tangan, berlaku 2 jam, tanpa login)
 Route::get('/laporan-pelanggan/{pengiriman}', [TrackingAdminController::class, 'laporanPelangganAkses'])
     ->middleware('signed:relative')->name('laporanPelanggan.akses');
@@ -58,6 +64,13 @@ Route::middleware(['auth', 'disetujui'])->group(function () {
 
     // Tracking pengiriman (data yang sama dipakai halaman publik /tracking)
     // Peta semua truk (lokasi terakhir dari aplikasi supir)
+    Route::get('/trackingAdmin/{pengiriman}/surat-jalan', [SuratJalanController::class, 'lihat'])->name('suratJalan');
+    Route::post('/trackingAdmin/{pengiriman}/surat-jalan/kirim', [SuratJalanController::class, 'kirim'])->name('suratJalan.kirim');
+
+    Route::get('/whatsapp', [WhatsAppController::class, 'edit'])->name('whatsapp');
+    Route::put('/whatsapp', [WhatsAppController::class, 'update'])->name('whatsapp.update');
+    Route::post('/whatsapp/tes', [WhatsAppController::class, 'tes'])->name('whatsapp.tes');
+
     Route::get('/peta-armada', [PetaArmadaController::class, 'index'])->name('petaArmada');
     Route::get('/peta-armada/data', [PetaArmadaController::class, 'data'])->name('petaArmada.data');
 

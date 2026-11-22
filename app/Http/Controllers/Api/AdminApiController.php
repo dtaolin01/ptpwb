@@ -13,6 +13,8 @@ use App\Models\ContactMessage;
 use App\Models\LokasiTruk;
 use App\Models\Pelanggan;
 use App\Models\Pengiriman;
+use App\Support\SuratJalan;
+use App\Support\WhatsApp;
 use App\Models\Supir;
 use App\Models\Truck;
 use App\Models\User;
@@ -295,6 +297,11 @@ class AdminApiController extends Controller
                 'alamat_pelanggan'  => $p->pelanggan?->alamat,
                 'update_terakhir'   => $terakhir?->locale('id')->translatedFormat('j M Y, H.i'),
                 'update_relatif'    => $terakhir?->locale('id')->diffForHumans(),
+                'surat_jalan_no'     => SuratJalan::nomor($p),
+                'surat_jalan_wa'     => $p->surat_jalan_wa_status
+                    ? $p->surat_jalan_wa_status.($p->surat_jalan_wa_at ? ' · '.$p->surat_jalan_wa_at->locale('id')->translatedFormat('j M Y, H.i') : '')
+                    : null,
+                'surat_jalan_wa_ok'  => $p->surat_jalan_wa_at !== null,
                 'laporan_dikirim'   => $p->laporan_dikirim_at
                     ? $p->laporan_dikirim_at->locale('id')->translatedFormat('j M Y, H.i').' ke '.$p->laporan_dikirim_ke
                     : null,
@@ -309,6 +316,7 @@ class AdminApiController extends Controller
             'jejak' => $jejak->values(),
             'link'  => [
                 'tracking_publik'   => route('tracking', ['resi' => $p->no_resi]),
+                'surat_jalan'       => SuratJalan::link($p),
                 // Halaman laporan untuk pelanggan, dibuka di browser HP tanpa login (berlaku 2 jam)
                 'laporan_pelanggan' => url(URL::temporarySignedRoute('laporanPelanggan.akses', now()->addHours(2), ['pengiriman' => $p->id], false)),
             ],
@@ -363,7 +371,22 @@ class AdminApiController extends Controller
             return $p;
         });
 
-        return response()->json(['message' => "Pengiriman {$p->no_resi} dibuat.", 'id' => $p->id], 201);
+        $pesan = "Pengiriman {$p->no_resi} dibuat.";
+        if (WhatsApp::aktif()) {
+            [$ok, $ket] = SuratJalan::kirimKePelanggan($p);
+            $pesan .= $ok ? ' Surat jalan terkirim ke WhatsApp pelanggan.' : ' Surat jalan belum terkirim: '.$ket.'.';
+        }
+
+        return response()->json(['message' => $pesan, 'id' => $p->id], 201);
+    }
+
+    /** Kirim (ulang) surat jalan ke WhatsApp pelanggan. */
+    public function kirimSuratJalan(int $id)
+    {
+        $p = Pengiriman::with('pelanggan')->findOrFail($id);
+        [$ok, $ket] = SuratJalan::kirimKePelanggan($p, paksa: true);
+
+        return response()->json(['message' => $ok ? 'Surat jalan '.$ket.'.' : 'Gagal: '.$ket], $ok ? 200 : 422);
     }
 
     public function ubahPengiriman(Request $request, int $id)
