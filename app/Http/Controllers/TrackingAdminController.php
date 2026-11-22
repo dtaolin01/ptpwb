@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Mail\LaporanPengirimanMail;
 use App\Models\Pelanggan;
 use App\Models\Pengiriman;
+use App\Support\SuratJalan;
+use App\Support\WhatsApp;
 use App\Models\Truck;
 use App\Support\Geocoder;
 use App\Support\Kota;
@@ -120,8 +122,15 @@ class TrackingAdminController extends Controller
             return $p;
         });
 
+        // Surat jalan langsung dikirim ke WhatsApp pelanggan (bila diaktifkan)
+        $pesan = "Pengiriman {$pengiriman->no_resi} berhasil ditambahkan.";
+        if (WhatsApp::aktif()) {
+            [$ok, $ket] = SuratJalan::kirimKePelanggan($pengiriman);
+            $pesan .= $ok ? ' Surat jalan terkirim ke WhatsApp pelanggan.' : ' Surat jalan BELUM terkirim: '.$ket.'.';
+        }
+
         return redirect()->route('trackingAdmin', ['resi' => $pengiriman->no_resi])
-            ->with('success', "Pengiriman {$pengiriman->no_resi} berhasil ditambahkan.");
+            ->with('success', $pesan);
     }
 
     public function edit(Pengiriman $pengiriman)

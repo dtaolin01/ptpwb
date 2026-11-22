@@ -53,6 +53,29 @@
                 </a>
             </div>
 
+            {{-- Surat jalan + status WhatsApp otomatis --}}
+            <div class="mt-3 flex flex-col gap-2 border-b border-pwb-line pb-4 sm:flex-row sm:flex-wrap sm:items-center">
+                <a href="{{ route('suratJalan', $pengiriman) }}" target="_blank"
+                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg sm:flex-1 border border-pwb-line bg-white px-3 py-2 text-xs font-bold text-pwb-navy hover:bg-pwb-bg">
+                    <i class="fa-solid fa-print"></i> Surat Jalan
+                </a>
+                <form method="POST" action="{{ route('suratJalan.kirim', $pengiriman) }}" class="sm:flex-1"
+                      onsubmit="return confirm('Kirim surat jalan ke WhatsApp pelanggan?')">
+                    @csrf
+                    <button type="submit" class="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-green-600 px-3 py-2 text-xs font-bold text-white hover:bg-green-700">
+                        <i class="fa-brands fa-whatsapp"></i> {{ $pengiriman->surat_jalan_wa_at ? 'Kirim Ulang WA' : 'Kirim Surat Jalan WA' }}
+                    </button>
+                </form>
+                <p class="w-full text-[11px] {{ $pengiriman->surat_jalan_wa_at ? 'text-green-700' : 'text-slate-500' }}">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    @if ($pengiriman->surat_jalan_wa_status)
+                        {{ $pengiriman->surat_jalan_wa_status }}@if ($pengiriman->surat_jalan_wa_at) · {{ $pengiriman->surat_jalan_wa_at->format('d/m H.i') }}@endif
+                    @else
+                        Surat jalan belum dikirim lewat WhatsApp.
+                    @endif
+                </p>
+            </div>
+
             <dl class="mt-5 space-y-4 text-sm">
                 @foreach ([
                     'No. Resi'      => $detail['no_resi'],

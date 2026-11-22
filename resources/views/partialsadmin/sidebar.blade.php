@@ -9,6 +9,7 @@
         ['Lokasi Pabrik', 'pabrik',        'fa-industry',     ['pabrik', 'pabrik.*']],
         ['Checker',       'checker',       'fa-user-check',   ['checker', 'checker.*']],
         ['Update Aplikasi','aplikasi',     'fa-mobile-screen-button', ['aplikasi', 'aplikasi.*']],
+        ['WhatsApp Otomatis', 'whatsapp',  'fa-brands fa-whatsapp', ['whatsapp', 'whatsapp.*']],
         ['Pesan Masuk',   'pesan',         'fa-envelope',     ['pesan', 'pesan.*']],
     ];
 
@@ -37,7 +38,7 @@
         @foreach ($menus as [$label, $route, $ikon, $aktif])
             <a href="{{ route($route) }}"
                class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm {{ request()->routeIs(...$aktif) ? 'bg-pwb-blue font-bold' : 'font-medium hover:bg-white/10' }}">
-                <i class="fa-solid {{ $ikon }} w-5 text-center text-base"></i>
+                <i class="{{ str_starts_with($ikon, 'fa-brands') ? $ikon : 'fa-solid '.$ikon }} w-5 text-center text-base"></i>
                 <span class="flex-1">{{ $label }}</span>
                 @if ($route === 'pesan' && $pesanBaru > 0)
                     <span class="rounded-full bg-pwb-red px-2 py-0.5 text-xs font-bold">{{ $pesanBaru }}</span>
