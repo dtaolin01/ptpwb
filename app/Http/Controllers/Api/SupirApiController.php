@@ -9,6 +9,7 @@ use App\Models\SupirToken;
 use App\Models\Truck;
 use App\Support\DeteksiPabrik;
 use App\Support\PetaPengiriman;
+use App\Support\Pelacakan;
 use App\Support\ProgresPengiriman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -62,6 +63,7 @@ class SupirApiController extends Controller
             'token' => $plain,
             'supir' => ['id' => $truck->supir->id, 'nama' => $truck->supir->nama],
             'truck' => ['id' => $truck->id, 'plat' => $truck->plat, 'jenis' => $truck->jenis],
+            'pelacakan' => Pelacakan::untukAplikasi(),
         ]);
     }
 
@@ -74,6 +76,7 @@ class SupirApiController extends Controller
             'supir'   => ['nama' => $request->attributes->get('supir')->nama],
             'truck'   => ['plat' => $truck->plat, 'jenis' => $truck->jenis],
             'pesanan' => $p ? $this->formatPesanan($p) : null,
+            'pelacakan' => Pelacakan::untukAplikasi(),
         ]);
     }
 
@@ -134,6 +137,8 @@ class SupirApiController extends Controller
             // Aplikasi mengirim lokasi berikutnya setelah sekian menit
             // (15 menit saat dekat pabrik/tujuan, selain itu 30 menit)
             'interval_menit' => $interval,
+            // Pengaturan pelacakan terbaru (diatur admin di website, tanpa perlu update aplikasi)
+            'pelacakan'      => Pelacakan::untukAplikasi(),
         ]);
     }
 

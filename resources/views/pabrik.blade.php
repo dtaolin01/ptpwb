@@ -42,7 +42,7 @@
             <p id="titik-info" class="mt-2 text-xs text-slate-500"></p>
         </div>
 
-        <div class="rounded-xl border border-pwb-line bg-white p-6">
+        <div class="mb-5 rounded-xl border border-pwb-line bg-white p-6">
             <h2 class="mb-1 font-bold text-pwb-navy"><i class="fa-solid fa-sliders mr-2"></i>Deteksi Otomatis</h2>
             <p class="mb-4 text-xs text-slate-500">
                 Status berubah sendiri dari lokasi HP supir: <b>Menuju Pabrik</b> → masuk area pabrik = <b>Sedang Muat di Pabrik</b>
@@ -66,6 +66,26 @@
                     {!! $err('jarak_dekat') !!}
                     <p class="mt-1 text-[11px] text-slate-500">Truk dalam jarak ini tampil sebagai "Mendekati" di aplikasi Checker.</p>
                 </div>
+            </div>
+        </div>
+
+        {{-- Pengaturan pelacakan aplikasi PWB Supir (dikirim ke HP supir, tanpa perlu update aplikasi) --}}
+        <div class="mb-5 rounded-xl border border-pwb-line bg-white p-6">
+            <h2 class="mb-1 font-bold text-pwb-navy"><i class="fa-solid fa-satellite-dish mr-2"></i>Pelacakan Aplikasi Supir</h2>
+            <p class="mb-4 text-xs text-slate-500">
+                Berlaku di semua HP supir dalam beberapa menit setelah disimpan, tanpa perlu memperbarui aplikasi.
+                Angka lebih kecil = lebih real time tetapi baterai & kuota lebih boros. Biarkan nilai bawaan bila ragu.
+            </p>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                @foreach (\App\Support\Pelacakan::NILAI as $k => [$bawaan, $min, $maks, $judul])
+                    <div>
+                        <label for="lacak_{{ $k }}" class="{{ $label }}">{{ $judul }}</label>
+                        <input id="lacak_{{ $k }}" type="number" min="{{ $min }}" max="{{ $maks }}" name="lacak[{{ $k }}]"
+                               value="{{ old('lacak.'.$k, $lacak[$k]) }}" class="{{ $input }}">
+                        {!! $err('lacak.'.$k) !!}
+                        <p class="mt-1 text-[11px] text-slate-500">Bawaan {{ $bawaan }} (boleh {{ $min }}–{{ $maks }})</p>
+                    </div>
+                @endforeach
             </div>
         </div>
 
