@@ -27,6 +27,7 @@ class Pengiriman extends Model
         'posisi_lat', 'posisi_lng', 'posisi_update',
         'waktu_tiba_pabrik', 'waktu_keluar_pabrik', 'waktu_tiba_tujuan',
         'lewat_pabrik', 'laporan_dikirim_at', 'laporan_dikirim_ke',
+        'penjual', 'barang',
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class Pengiriman extends Model
         'lewat_pabrik'        => 'boolean',
         'laporan_dikirim_at'  => 'datetime',
         'surat_jalan_wa_at'   => 'datetime',
+        'barang'              => 'array',
     ];
 
     // status => [label, warna badge]

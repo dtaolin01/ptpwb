@@ -59,112 +59,83 @@
         <div id="bingkai">
             <div id="kertas" class="mx-auto bg-white p-10 shadow-sm">
 
-                {{-- Kop --}}
-                <header class="flex items-start justify-between gap-4 border-b-[3px] border-pwb-navy pb-4">
-                    <div class="flex items-center gap-4">
-                        <img src="{{ asset('images/pwb-logo.png') }}" onerror="this.src='{{ asset('images/logo-pwb.png') }}'" alt="PWB" class="h-14 w-auto">
-                        <div>
-                            <p class="text-lg font-extrabold leading-tight text-pwb-navy">PT PUTRA WIJAYA BERJAYA</p>
-                            <p class="text-[11px] leading-snug text-slate-600">Logistics &amp; Distribution</p>
-                            <p class="text-[11px] leading-snug text-slate-500">Jl. Raya Simpang Pasir RT 29 Samarinda, Kalimantan Timur</p>
-                            <p class="text-[11px] leading-snug text-slate-500">WA +62 852-1881-5858 · putrawijaya.berjaya@gmail.com</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <h1 class="text-2xl font-extrabold tracking-wide text-pwb-navy">SURAT JALAN</h1>
-                        <p class="mt-1 text-sm font-bold">No. {{ $nomor }}</p>
-                        <p class="text-xs text-slate-500">Tanggal: {{ ($p->tanggal_kirim ?? now())->locale('id')->translatedFormat('d F Y') }}</p>
+                {{-- Judul + kop --}}
+                <h1 class="text-center text-2xl font-extrabold tracking-[0.2em] text-pwb-navy">SURAT JALAN</h1>
+                <header class="mt-4 flex items-center gap-4 border-b-[3px] border-pwb-navy pb-4">
+                    <img src="{{ asset('images/pwb-logo.png') }}" onerror="this.src='{{ asset('images/logo-pwb.png') }}'" alt="PWB" class="h-14 w-auto">
+                    <div>
+                        <p class="text-lg font-extrabold leading-tight text-pwb-navy">PT PUTRA WIJAYA BERJAYA</p>
+                        <p class="text-[11px] leading-snug text-slate-500">Jl. Raya Simpang Pasir RT 29 Samarinda, Kalimantan Timur</p>
+                        <p class="text-[11px] leading-snug text-slate-500">WA +62 852-1881-5858 · putrawijaya.berjaya@gmail.com</p>
                     </div>
                 </header>
 
-                {{-- Kepada & pengiriman --}}
+                {{-- Kepada & keterangan --}}
                 <section class="mt-5 grid grid-cols-2 gap-6 text-sm">
                     <div>
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Kepada Yth.</p>
+                        <p class="text-slate-500">Kepada Yth.</p>
                         <p class="text-base font-extrabold text-pwb-navy">{{ $p->pelanggan?->nama ?? '-' }}</p>
-                        @if ($p->pelanggan?->kontak)<p>u.p. {{ $p->pelanggan->kontak }}</p>@endif
                         <p class="text-slate-600">{{ $p->pelanggan?->alamat }}</p>
-                        @if ($p->pelanggan?->telepon)<p class="text-slate-600">Telp/WA: {{ $p->pelanggan->telepon }}</p>@endif
                     </div>
-                    <div>
-                        <table class="w-full text-sm">
-                            @foreach ([
-                                'No. Resi'      => $p->no_resi,
-                                'Tanggal kirim' => $p->tanggal_kirim?->locale('id')->translatedFormat('d F Y') ?? '-',
-                                'Estimasi tiba' => $p->estimasi_tiba?->locale('id')->translatedFormat('d F Y') ?? '-',
-                                'Asal'          => $p->asal ?: '-',
-                                'Tujuan'        => $p->tujuan ?: '-',
-                                'No. Polisi'    => $p->truck?->plat ?? '-',
-                                'Jenis truk'    => $p->truck?->jenis ?? '-',
-                                'Pengemudi'     => $p->truck?->supir?->nama ?? '-',
-                            ] as $k => $v)
-                                <tr>
-                                    <td class="w-32 py-0.5 align-top text-slate-500">{{ $k }}</td>
-                                    <td class="py-0.5 align-top font-semibold">: {{ $v }}</td>
-                                </tr>
-                            @endforeach
-                        </table>
-                    </div>
+                    <table class="h-fit w-full text-sm">
+                        @foreach ([
+                            'Tgl. Surat Jalan' => ($p->tanggal_kirim ?? now())->locale('id')->translatedFormat('d F Y'),
+                            'No. Resi'         => $p->no_resi,
+                            'Penjual'          => $p->penjual ?: '-',
+                        ] as $k => $v)
+                            <tr>
+                                <td class="w-32 py-0.5 align-top text-slate-500">{{ $k }}</td>
+                                <td class="py-0.5 align-top font-semibold">: {{ $v }}</td>
+                            </tr>
+                        @endforeach
+                    </table>
                 </section>
 
                 {{-- Barang --}}
-                <section class="mt-6">
-                    <p class="mb-2 text-sm">Bersama ini kami kirimkan barang-barang sebagai berikut:</p>
-                    <table class="garis w-full border-collapse text-sm">
-                        <thead class="bg-pwb-sky/60 text-pwb-navy">
+                <table class="garis mt-6 w-full border-collapse text-sm">
+                    <thead class="bg-pwb-sky/60 text-pwb-navy">
+                        <tr>
+                            <th class="w-12 px-3 py-2 text-center">No</th>
+                            <th class="px-3 py-2 text-left">Nama Barang</th>
+                            <th class="w-36 px-3 py-2 text-left">Kode Barang</th>
+                            <th class="w-24 px-3 py-2 text-right">Qty</th>
+                            <th class="w-28 px-3 py-2 text-left">Satuan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($barang as $b)
                             <tr>
-                                <th class="w-12 px-3 py-2 text-center">No</th>
-                                <th class="px-3 py-2 text-left">Nama / Jenis Barang</th>
-                                <th class="w-40 px-3 py-2 text-left">Jumlah</th>
-                                <th class="w-48 px-3 py-2 text-left">Keterangan</th>
+                                <td class="px-3 py-2.5 text-center">{{ $loop->iteration }}</td>
+                                <td class="px-3 py-2.5 font-semibold">{{ $b['nama'] }}</td>
+                                <td class="px-3 py-2.5">{{ $b['kode'] ?? '' }}</td>
+                                <td class="px-3 py-2.5 text-right">{{ \App\Support\SuratJalan::angka($b['qty'] ?? null) }}</td>
+                                <td class="px-3 py-2.5">{{ $b['satuan'] ?? '' }}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-3 py-3 text-center align-top">1</td>
-                                <td class="px-3 py-3 align-top font-semibold">{{ $p->muatan }}</td>
-                                <td class="px-3 py-3 align-top">&nbsp;</td>
-                                <td class="px-3 py-3 align-top">{{ $p->lewat_pabrik ? 'Muat di pabrik' : 'Dalam kota' }}</td>
-                            </tr>
-                            @for ($i = 2; $i <= 4; $i++)
-                                <tr><td class="px-3 py-3 text-center text-slate-300">{{ $i }}</td><td></td><td></td><td></td></tr>
-                            @endfor
-                        </tbody>
-                    </table>
-                    <p class="mt-2 text-[11px] text-slate-500">
-                        Mohon barang diperiksa saat diterima. Kekurangan / kerusakan harap dicatat pada surat jalan ini sebelum ditandatangani.
-                    </p>
-                </section>
+                        @endforeach
+                    </tbody>
+                </table>
 
-                {{-- Tanda tangan + QR --}}
-                <section class="mt-8 grid grid-cols-4 gap-4 text-center text-sm">
-                    @foreach (['Hormat kami,' => 'PT Putra Wijaya Berjaya', 'Pengemudi,' => $p->truck?->supir?->nama ?? '', 'Diterima oleh,' => 'Nama, tanggal & cap'] as $atas => $bawah)
+                {{-- Sopir & plat --}}
+                <table class="mt-4 text-sm">
+                    <tr><td class="w-32 py-0.5 text-slate-500">Sopir</td><td class="py-0.5 font-semibold">: {{ $p->truck?->supir?->nama ?? '-' }}</td></tr>
+                    <tr><td class="w-32 py-0.5 text-slate-500">Plat Mobil</td><td class="py-0.5 font-semibold">: {{ $p->truck?->plat ?? '-' }}</td></tr>
+                </table>
+
+                {{-- Tanda tangan --}}
+                <section class="mt-10 grid grid-cols-3 gap-8 text-center text-sm">
+                    @foreach (['Hormat kami,' => 'PT Putra Wijaya Berjaya', 'Sopir,' => $p->truck?->supir?->nama, 'Penerima,' => null] as $atas => $bawah)
                         <div>
-                            <p class="text-xs text-slate-500">{{ $atas }}</p>
+                            <p class="text-slate-500">{{ $atas }}</p>
                             <div class="h-20"></div>
                             <p class="border-t border-slate-400 pt-1 text-xs font-semibold">{{ $bawah ?: '(.........................)' }}</p>
                         </div>
                     @endforeach
-                    <div class="flex flex-col items-center">
-                        <div id="qr" class="h-[96px] w-[96px]"></div>
-                        <p class="mt-1 text-[10px] leading-tight text-slate-500">Pindai untuk<br>lacak pengiriman</p>
-                    </div>
                 </section>
-
-                <footer class="mt-8 border-t border-pwb-line pt-2 text-center text-[10px] text-slate-400">
-                    Surat jalan ini dibuat otomatis oleh sistem PT Putra Wijaya Berjaya · {{ $nomor }} · Lacak: {{ $tracking }}
-                </footer>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        // QR code ke halaman tracking
-        try {
-            new QRCode(document.getElementById('qr'), { text: @json($tracking), width: 96, height: 96, correctLevel: QRCode.CorrectLevel.M });
-        } catch (e) {}
-
         // Tampilan HP: perkecil kertas A4 supaya muat di layar (cetak tetap ukuran penuh)
         (function () {
             var kertas = document.getElementById('kertas'), bingkai = document.getElementById('bingkai'), wadah = document.getElementById('wadah');

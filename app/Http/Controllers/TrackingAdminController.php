@@ -300,6 +300,7 @@ class TrackingAdminController extends Controller
     private function validasi(Request $request, ?Pengiriman $pengiriman = null): array
     {
         $request->merge(['no_resi' => strtoupper(trim((string) $request->input('no_resi')))]);
+        SuratJalan::siapkanInput($request);
 
         $koordinat = fn ($min, $max) => ['nullable', 'numeric', "between:$min,$max"];
 
@@ -325,7 +326,7 @@ class TrackingAdminController extends Controller
             'events.*.waktu'   => ['nullable', 'date'],
             'events.*.lokasi'  => ['nullable', 'string', 'max:150'],
             'events.*.selesai' => ['nullable', 'boolean'],
-        ], [
+        ] + SuratJalan::aturan(), SuratJalan::PESAN + [
             'no_resi.unique'            => 'Nomor resi sudah dipakai.',
             'events.*.judul.required'   => 'Judul langkah tidak boleh kosong.',
             'estimasi_tiba.after_or_equal' => 'Estimasi tiba tidak boleh sebelum tanggal kirim.',
@@ -386,7 +387,10 @@ class TrackingAdminController extends Controller
             'posisi_lat'    => $data['posisi_lat'] ?? null,
             'posisi_lng'    => $data['posisi_lng'] ?? null,
             'posisi_update' => ($data['posisi_lat'] ?? null) !== null ? now() : null,
-        ] + (isset($data['no_resi']) && $data['no_resi'] !== '' ? ['no_resi' => $data['no_resi']] : []);
+        ] + (isset($data['no_resi']) && $data['no_resi'] !== '' ? ['no_resi' => $data['no_resi']] : [])
+          // Isian surat jalan hanya diubah bila dikirim (aplikasi lama tidak mengirimnya)
+          + (array_key_exists('penjual', $data) ? ['penjual' => $data['penjual'] ?: null] : [])
+          + (array_key_exists('barang', $data) ? ['barang' => $data['barang'] ?: null] : []);
     }
 
     /**

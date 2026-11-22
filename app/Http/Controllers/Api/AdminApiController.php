@@ -298,6 +298,8 @@ class AdminApiController extends Controller
                 'update_terakhir'   => $terakhir?->locale('id')->translatedFormat('j M Y, H.i'),
                 'update_relatif'    => $terakhir?->locale('id')->diffForHumans(),
                 'surat_jalan_no'     => SuratJalan::nomor($p),
+                'penjual'            => $p->penjual,
+                'barang'             => $p->barang ?? [],
                 'surat_jalan_wa'     => $p->surat_jalan_wa_status
                     ? $p->surat_jalan_wa_status.($p->surat_jalan_wa_at ? ' · '.$p->surat_jalan_wa_at->locale('id')->translatedFormat('j M Y, H.i') : '')
                     : null,
@@ -326,6 +328,7 @@ class AdminApiController extends Controller
     private function validasiPengiriman(Request $request, ?Pengiriman $p = null): array
     {
         // Kolom titik tidak dikirim aplikasi → diisi otomatis (alamat pelanggan / posisi truk)
+        SuratJalan::siapkanInput($request);
         $kosong = array_fill_keys(['asal', 'tujuan', 'asal_lat', 'asal_lng', 'tujuan_lat', 'tujuan_lng', 'posisi_lat', 'posisi_lng', 'truck_id', 'estimasi_tiba'], null);
 
         $data = $request->validate([
@@ -339,7 +342,7 @@ class AdminApiController extends Controller
             'tujuan'        => ['nullable', 'string', 'max:150'],
             'status'        => ['nullable', Rule::in(array_keys(Pengiriman::STATUS))],
             'no_resi'       => ['nullable', 'string', 'max:50', Rule::unique('pengiriman', 'no_resi')->ignore($p?->id)],
-        ], [
+        ] + SuratJalan::aturan(), SuratJalan::PESAN + [
             'estimasi_tiba.after_or_equal' => 'Estimasi tiba tidak boleh sebelum tanggal kirim.',
             'no_resi.unique'               => 'Nomor resi sudah dipakai.',
         ], ['pelanggan_id' => 'pelanggan', 'truck_id' => 'truk']);

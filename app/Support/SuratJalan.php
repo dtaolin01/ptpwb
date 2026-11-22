@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Pengiriman;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -11,6 +12,62 @@ use Illuminate\Support\Facades\URL;
  */
 class SuratJalan
 {
+    /**
+     * Rapikan isian penjual & barang sebelum divalidasi:
+     * baris barang yang kosong dibuang, dan "Jenis muatan" diisi otomatis dari nama barang bila dikosongkan.
+     */
+    public static function siapkanInput(Request $request): void
+    {
+        if (! $request->has('barang')) {
+            return;
+        }
+        $barang = collect((array) $request->input('barang'))
+            ->map(fn ($b) => array_map(fn ($v) => is_string($v) ? trim($v) : $v, (array) $b))
+            ->filter(fn ($b) => filled($b['nama'] ?? null) || filled($b['kode'] ?? null) || filled($b['qty'] ?? null))
+            ->map(fn ($b) => ['nama' => $b['nama'] ?? null, 'kode' => $b['kode'] ?? null, 'qty' => isset($b['qty']) ? str_replace(',', '.', (string) $b['qty']) : null, 'satuan' => $b['satuan'] ?? null])
+            ->values()->all();
+        $request->merge(['barang' => $barang]);
+
+        if (blank($request->input('muatan')) && $barang) {
+            $request->merge(['muatan' => mb_substr(collect($barang)->pluck('nama')->filter()->implode(', ') ?: 'Barang', 0, 150)]);
+        }
+    }
+
+    /** Aturan validasi penjual & barang (dipakai website dan API admin). */
+    public static function aturan(): array
+    {
+        return [
+            'penjual'         => ['nullable', 'string', 'max:150'],
+            'barang'          => ['nullable', 'array', 'max:30'],
+            'barang.*.nama'   => ['required', 'string', 'max:150'],
+            'barang.*.kode'   => ['nullable', 'string', 'max:50'],
+            'barang.*.qty'    => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'barang.*.satuan' => ['nullable', 'string', 'max:20'],
+        ];
+    }
+
+    public const PESAN = [
+        'barang.*.nama.required' => 'Nama barang wajib diisi.',
+        'barang.*.qty.numeric'   => 'Qty harus berupa angka.',
+    ];
+
+    /** Daftar barang untuk dicetak; pengiriman lama tanpa daftar barang memakai "Jenis muatan". */
+    public static function barang(Pengiriman $p): array
+    {
+        return $p->barang ?: [['nama' => $p->muatan, 'kode' => null, 'qty' => null, 'satuan' => null]];
+    }
+
+    /** 25.0 → "25", 2.5 → "2,5" */
+    public static function angka($qty): string
+    {
+        if ($qty === null || $qty === '') {
+            return '';
+        }
+        $f = (float) $qty;
+
+        return rtrim(rtrim(number_format($f, 3, ',', '.'), '0'), ',');
+    }
+
     public static function nomor(Pengiriman $p): string
     {
         return 'SJ/'.$p->no_resi;
@@ -28,18 +85,21 @@ class SuratJalan
         $baris = [
             'Yth. '.($p->pelanggan?->kontak ?: $p->pelanggan?->nama ?: 'Bapak/Ibu').',',
             '',
-            'Berikut *Surat Jalan* pengiriman dari *PT Putra Wijaya Berjaya*:',
+            'Berikut *Surat Jalan* dari *PT Putra Wijaya Berjaya*:',
             '',
-            '• No. Surat Jalan: '.self::nomor($p),
             '• No. Resi: '.$p->no_resi,
-            '• Muatan: '.$p->muatan,
-            '• Tujuan: '.($p->tujuan ?: '-'),
+            '• Tanggal: '.($p->tanggal_kirim ?? now())->locale('id')->translatedFormat('j F Y'),
         ];
-        if ($p->truck) {
-            $baris[] = '• Armada: '.$p->truck->plat.($p->truck->supir ? ' ('.$p->truck->supir->nama.')' : '');
+        if ($p->penjual) {
+            $baris[] = '• Penjual: '.$p->penjual;
         }
-        if ($p->estimasi_tiba) {
-            $baris[] = '• Estimasi tiba: '.$p->estimasi_tiba->locale('id')->translatedFormat('j F Y');
+        $baris[] = '• Barang:';
+        foreach (self::barang($p) as $b) {
+            $jumlah = trim(self::angka($b['qty'] ?? null).' '.($b['satuan'] ?? ''));
+            $baris[] = '   - '.$b['nama'].(! empty($b['kode']) ? ' ['.$b['kode'].']' : '').($jumlah !== '' ? ' — '.$jumlah : '');
+        }
+        if ($p->truck) {
+            $baris[] = '• Sopir / Plat: '.($p->truck->supir?->nama ?? '-').' / '.$p->truck->plat;
         }
         array_push($baris,
             '',
