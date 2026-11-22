@@ -121,7 +121,13 @@ class FotoBukti
         $ukuran = max(11, (int) round(max($w, $h) / 58)); // ±22 px pada foto 1280 px (mendatar maupun berdiri)
         $jarak = (int) round($ukuran * 1.55);
         $tepi = (int) round($ukuran * 0.9);
-        $lebarMaks = $w - 2 * $tepi;
+
+        // Logo PWB putih: foto mendatar → di kanan strip; foto berdiri → baris sendiri di atas teks
+        $logo = self::logo();
+        $berdiri = $h > $w;
+        $logoH = (int) round($jarak * ($berdiri ? 1.9 : 2.4));
+        $logoW = $logo ? (int) round(imagesx($logo) * $logoH / imagesy($logo)) : 0;
+        $lebarMaks = $w - 2 * $tepi - ($logo && ! $berdiri ? $logoW + $tepi : 0);
 
         // Bungkus baris panjang (alamat) supaya tidak terpotong
         $siap = [];
@@ -131,22 +137,51 @@ class FotoBukti
             }
         }
 
-        $tinggiKotak = count($siap) * $jarak + $tepi;
-        $hitam = imagecolorallocatealpha($g, 0, 0, 0, 50);
+        $tinggiTeks = count($siap) * $jarak;
+        $ruangLogo = $logo && $berdiri ? $logoH + (int) round($tepi * 0.6) : 0;
+        $tinggiKotak = max($tinggiTeks + $ruangLogo, $logo && ! $berdiri ? $logoH : 0) + $tepi + (int) round($tepi * 0.6);
+        $atas = $h - $tinggiKotak;
+
         imagealphablending($g, true);
-        imagefilledrectangle($g, 0, $h - $tinggiKotak, $w, $h, $hitam);
+        imagefilledrectangle($g, 0, $atas, $w, $h, imagecolorallocatealpha($g, 0, 0, 0, 50));
         $putih = imagecolorallocate($g, 255, 255, 255);
         $kuning = imagecolorallocate($g, 255, 214, 10);
 
-        $y = $h - $tinggiKotak + $jarak;
-        foreach ($siap as $i => [$teks, $b]) {
+        if ($logo) {
+            [$lx, $ly] = $berdiri
+                ? [$tepi, $atas + $tepi]                                                   // kiri atas strip
+                : [$w - $tepi - $logoW, $atas + (int) (($tinggiKotak - $logoH) / 2)];      // kanan, tengah
+            imagecopyresampled($g, $logo, $lx, $ly, 0, 0, $logoW, $logoH, imagesx($logo), imagesy($logo));
+        }
+
+        // Teks rata kiri (baris tanggal/jam berwarna kuning)
+        $y = $berdiri
+            ? $atas + $tepi + $ruangLogo + $jarak
+            : $atas + (int) (($tinggiKotak - $tinggiTeks) / 2) + $jarak;
+        foreach ($siap as [$teks, $b]) {
             if ($ttf) {
-                imagettftext($g, $b ? $ukuran : $ukuran * 0.9, 0, $tepi, $y - (int) ($jarak * 0.3), $i === 0 ? $kuning : $putih, $b ? $tebal : $font, $teks);
+                imagettftext($g, $b ? $ukuran : $ukuran * 0.9, 0, $tepi, $y - (int) ($jarak * 0.3), $b ? $kuning : $putih, $b ? $tebal : $font, $teks);
             } else {
-                imagestring($g, 4, $tepi, $y - $jarak + 4, $teks, $i === 0 ? $kuning : $putih);
+                imagestring($g, 4, $tepi, $y - $jarak + 4, $teks, $b ? $kuning : $putih);
             }
             $y += $jarak;
         }
+    }
+
+    /** Logo PWB putih (transparan) untuk cap foto; null bila file tidak ada. */
+    private static function logo(): ?\GdImage
+    {
+        static $logo = false;
+        if ($logo === false) {
+            $file = resource_path('images/logo-pwb-putih.png');
+            $logo = is_file($file) ? (@imagecreatefrompng($file) ?: null) : null;
+            if ($logo) {
+                imagealphablending($logo, false);
+                imagesavealpha($logo, true);
+            }
+        }
+
+        return $logo;
     }
 
     private static function bungkus(string $teks, string $font, float $ukuran, int $lebarMaks): array
