@@ -13,6 +13,7 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PesanController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SupirController;
+use App\Http\Controllers\BuktiFotoController;
 use App\Http\Controllers\SuratJalanController;
 use App\Http\Controllers\TrackingAdminController;
 use App\Http\Controllers\WhatsAppController;
@@ -32,6 +33,10 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware('thrott
 Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
 
 // Unduh APK aplikasi Android (pemasangan pertama & pembaruan otomatis)
+// Foto bukti pengiriman (link bertanda tangan)
+Route::get('/bukti/{foto}', [BuktiFotoController::class, 'tampil'])
+    ->middleware('signed:relative')->name('bukti.foto');
+
 // Surat jalan dibuka pelanggan dari link WhatsApp (link bertanda tangan, tanpa login)
 Route::get('/surat-jalan/{pengiriman}', [SuratJalanController::class, 'publik'])
     ->middleware('signed:relative')->name('suratJalan.publik');
@@ -69,6 +74,8 @@ Route::middleware(['auth', 'disetujui'])->group(function () {
     Route::get('/trackingAdmin/{pengiriman}/surat-jalan', [SuratJalanController::class, 'lihat'])->name('suratJalan');
     Route::post('/trackingAdmin/{pengiriman}/surat-jalan/kirim', [SuratJalanController::class, 'kirim'])->name('suratJalan.kirim');
     Route::delete('/trackingAdmin/{pengiriman}/surat-jalan/tanda-tangan', [SuratJalanController::class, 'hapusTandaTangan'])->name('suratJalan.ttd.hapus');
+
+    Route::delete('/bukti/{foto}', [BuktiFotoController::class, 'hapus'])->name('bukti.hapus');
 
     Route::get('/whatsapp', [WhatsAppController::class, 'edit'])->name('whatsapp');
     Route::put('/whatsapp', [WhatsAppController::class, 'update'])->name('whatsapp.update');

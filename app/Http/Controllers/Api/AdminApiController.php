@@ -311,6 +311,7 @@ class AdminApiController extends Controller
                     ? $p->laporan_dikirim_at->locale('id')->translatedFormat('j M Y, H.i').' ke '.$p->laporan_dikirim_ke
                     : null,
             ],
+            'foto_bukti' => $p->buktiFoto()->get()->map->keArray()->values(),
             'riwayat' => $p->events->map(fn ($e) => [
                 'judul'   => $e->judul,
                 'waktu'   => $e->waktu?->locale('id')->translatedFormat('j M Y, H.i'),

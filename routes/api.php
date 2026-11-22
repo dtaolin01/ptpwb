@@ -23,6 +23,8 @@ Route::prefix('supir')->controller(SupirApiController::class)->group(function ()
         Route::get('/pesanan', 'pesanan');
         Route::post('/lokasi', 'lokasi');
         Route::post('/pesanan/{id}/selesai', 'selesai')->whereNumber('id');
+        Route::post('/pesanan/{id}/foto', 'kirimFoto')->whereNumber('id');
+        Route::delete('/pesanan/{id}/foto/{foto}', 'hapusFoto')->whereNumber(['id', 'foto']);
         Route::post('/logout', 'logout');
     });
 });
