@@ -186,6 +186,7 @@ class SupirApiController extends Controller
             'foto' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'lat'  => ['nullable', 'numeric', 'between:-90,90'],
             'lng'  => ['nullable', 'numeric', 'between:-180,180'],
+            'waktu' => ['nullable', 'integer'],     // epoch millis saat foto diambil (dari HP)
         ], [
             'foto.required' => 'Foto belum dipilih.',
             'foto.image'    => 'File harus berupa foto.',
@@ -198,7 +199,13 @@ class SupirApiController extends Controller
         }
 
         try {
-            $foto = FotoBukti::simpan($p, $request->file('foto'), $request->float('lat') ?: null, $request->float('lng') ?: null);
+            $lat = $request->filled(['lat', 'lng']) ? $request->float('lat') : null;
+            $lng = $lat !== null ? $request->float('lng') : null;
+            $waktu = $request->filled('waktu') ? Carbon::createFromTimestampMs((int) $request->input('waktu')) : null;
+            if ($waktu && ($waktu->gt(now()->addMinutes(5)) || $waktu->lt(now()->subDays(3)))) {
+                $waktu = null;   // jam HP salah → pakai waktu server
+            }
+            $foto = FotoBukti::simpan($p, $request->file('foto'), $lat, $lng, $waktu);
         } catch (\Throwable $e) {
             report($e);
 

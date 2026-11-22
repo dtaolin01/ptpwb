@@ -97,6 +97,44 @@ class Geocoder
         });
     }
 
+    /**
+     * Koordinat → alamat lengkap untuk keterangan foto bukti,
+     * mis. "Jl. Pangeran Suryanata No. 12, Air Putih, Samarinda Ulu, Samarinda, Kalimantan Timur".
+     */
+    public static function alamatLengkap(float $lat, float $lng): ?string
+    {
+        $key = 'geo_lengkap_'.round($lat, 4).'_'.round($lng, 4);
+
+        return Cache::remember($key, now()->addDays(30), function () use ($lat, $lng) {
+            try {
+                $res = self::http()->get(self::URL.'/reverse', [
+                    'lat'            => $lat,
+                    'lon'            => $lng,
+                    'format'         => 'jsonv2',
+                    'zoom'           => 18,
+                    'addressdetails' => 1,
+                ]);
+                if (! $res->successful()) {
+                    return null;
+                }
+                $a = $res->json('address', []);
+                $jalan = trim(($a['road'] ?? $a['pedestrian'] ?? $a['hamlet'] ?? '').(isset($a['house_number']) ? ' No. '.$a['house_number'] : ''));
+                $bagian = array_values(array_unique(array_filter([
+                    $a['amenity'] ?? $a['building'] ?? $a['shop'] ?? $a['industrial'] ?? null,
+                    $jalan ?: null,
+                    $a['village'] ?? $a['suburb'] ?? $a['neighbourhood'] ?? null,
+                    $a['city_district'] ?? $a['district'] ?? null,
+                    self::kota($a),
+                    $a['state'] ?? null,
+                ])));
+
+                return $bagian ? mb_substr(implode(', ', $bagian), 0, 255) : ($res->json('display_name') ? mb_substr($res->json('display_name'), 0, 255) : null);
+            } catch (\Throwable $e) {
+                return null;
+            }
+        });
+    }
+
     private static function kota(array $a): ?string
     {
         $kota = $a['city'] ?? $a['county'] ?? $a['regency'] ?? $a['town'] ?? $a['municipality'] ?? $a['state'] ?? null;

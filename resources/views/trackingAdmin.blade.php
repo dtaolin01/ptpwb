@@ -60,7 +60,7 @@
                 @if ($fotoBukti->isEmpty())
                     <p class="text-[11px] text-slate-500">Belum ada foto. Sopir mengirim foto dari aplikasi saat barang sampai.</p>
                 @else
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-2 gap-2">
                         @foreach ($fotoBukti as $f)
                             <div class="group relative overflow-hidden rounded-lg border border-pwb-line">
                                 <a href="{{ $f->url() }}" target="_blank"><img src="{{ $f->url() }}" loading="lazy" class="aspect-square w-full object-cover" alt="Foto bukti"></a>
@@ -68,7 +68,16 @@
                                     @csrf @method('DELETE')
                                     <button class="rounded bg-white/90 px-1.5 py-0.5 text-[10px] text-red-600" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                                 </form>
-                                <p class="bg-white px-1 py-0.5 text-[10px] text-slate-500">{{ $f->created_at->format('d/m H.i') }} · {{ (int) round($f->ukuran / 1024) }} KB</p>
+                                <div class="bg-white px-1.5 py-1 text-[10px] leading-snug text-slate-600">
+                                    <p class="font-bold text-pwb-navy">{{ $f->waktuLabel() }}</p>
+                                    @if ($f->alamat)
+                                        <p>{{ $f->alamat }}</p>
+                                    @endif
+                                    <p class="text-slate-400">
+                                        @if ($f->linkPeta())<a href="{{ $f->linkPeta() }}" target="_blank" class="text-pwb-blue hover:underline">Peta</a> · @endif
+                                        {{ $f->sumber_lokasi === 'truk' ? 'lokasi GPS truk' : ($f->sumber_lokasi === 'hp' ? 'lokasi HP' : 'tanpa lokasi') }} · {{ (int) round($f->ukuran / 1024) }} KB
+                                    </p>
+                                </div>
                             </div>
                         @endforeach
                     </div>
