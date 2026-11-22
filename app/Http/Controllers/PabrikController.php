@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengaturan;
 use App\Support\Geocoder;
 use App\Support\Pabrik;
+use App\Support\Pelacakan;
 use Illuminate\Http\Request;
 
 /**
@@ -15,7 +16,7 @@ class PabrikController extends Controller
 {
     public function edit()
     {
-        return view('pabrik', ['pabrik' => Pabrik::data()]);
+        return view('pabrik', ['pabrik' => Pabrik::data(), 'lacak' => Pelacakan::untukAplikasi()]);
     }
 
     public function update(Request $request)
@@ -28,7 +29,9 @@ class PabrikController extends Controller
             'radius_pabrik' => ['required', 'integer', 'between:50,5000'],
             'radius_tujuan' => ['required', 'integer', 'between:50,5000'],
             'jarak_dekat'   => ['required', 'numeric', 'between:1,50'],
-        ], [], [
+        ] + collect(Pelacakan::NILAI)->mapWithKeys(fn ($v, $k) => [
+            "lacak.$k" => ['required', 'integer', "between:{$v[1]},{$v[2]}"],
+        ])->all(), [], collect(Pelacakan::NILAI)->mapWithKeys(fn ($v, $k) => ["lacak.$k" => strtolower($v[3])])->all() + [
             'nama'          => 'nama pabrik',
             'radius_pabrik' => 'radius area pabrik',
             'radius_tujuan' => 'radius area tujuan',
@@ -52,6 +55,9 @@ class PabrikController extends Controller
         ];
         foreach ($kunci as $field => $k) {
             Pengaturan::simpan($k, $data[$field] ?? null);
+        }
+        foreach (array_keys(Pelacakan::NILAI) as $k) {
+            Pengaturan::simpan('lacak_'.$k, (int) $data['lacak'][$k]);
         }
 
         return redirect()->route('pabrik')->with('success', 'Lokasi pabrik berhasil disimpan.');
