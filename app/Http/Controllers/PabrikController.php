@@ -30,7 +30,7 @@ class PabrikController extends Controller
             'radius_tujuan' => ['required', 'integer', 'between:50,5000'],
             'jarak_dekat'   => ['required', 'numeric', 'between:1,50'],
         ] + collect(Pelacakan::NILAI)->mapWithKeys(fn ($v, $k) => [
-            "lacak.$k" => ['required', 'integer', "between:{$v[1]},{$v[2]}"],
+            "lacak.$k" => ['nullable', 'integer', "between:{$v[1]},{$v[2]}"],
         ])->all(), [], collect(Pelacakan::NILAI)->mapWithKeys(fn ($v, $k) => ["lacak.$k" => strtolower($v[3])])->all() + [
             'nama'          => 'nama pabrik',
             'radius_pabrik' => 'radius area pabrik',
@@ -56,8 +56,11 @@ class PabrikController extends Controller
         foreach ($kunci as $field => $k) {
             Pengaturan::simpan($k, $data[$field] ?? null);
         }
+        // Kolom pelacakan yang tidak dikirim / dikosongkan = nilai lama tetap dipakai
         foreach (array_keys(Pelacakan::NILAI) as $k) {
-            Pengaturan::simpan('lacak_'.$k, (int) $data['lacak'][$k]);
+            if (isset($data['lacak'][$k])) {
+                Pengaturan::simpan('lacak_'.$k, (int) $data['lacak'][$k]);
+            }
         }
 
         return redirect()->route('pabrik')->with('success', 'Lokasi pabrik berhasil disimpan.');
