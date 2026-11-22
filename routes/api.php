@@ -17,7 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('supir')->controller(SupirApiController::class)->group(function () {
     Route::post('/login', 'login')->middleware('throttle:10,1');
 
-    Route::middleware([SupirApi::class, 'throttle:60,1'])->group(function () {
+    // Batas per jenis aplikasi (bukan dibagi dengan aplikasi lain). Banyak HP operator yang sama memakai IP yang sama,
+    // jadi batasnya longgar; aplikasi supir mengirim lokasi ±1x per menit + antrean saat sinyal kembali.
+    Route::middleware([SupirApi::class, 'throttle:600,1,supir-api'])->group(function () {
         Route::get('/pesanan', 'pesanan');
         Route::post('/lokasi', 'lokasi');
         Route::post('/pesanan/{id}/selesai', 'selesai')->whereNumber('id');
@@ -33,7 +35,7 @@ Route::prefix('supir')->controller(SupirApiController::class)->group(function ()
 Route::prefix('checker')->controller(CheckerApiController::class)->group(function () {
     Route::post('/login', 'login')->middleware('throttle:10,1');
 
-    Route::middleware([CheckerApi::class, 'throttle:120,1'])->group(function () {
+    Route::middleware([CheckerApi::class, 'throttle:300,1,checker-api'])->group(function () {
         Route::get('/truk', 'truk');
         Route::get('/notifikasi', 'notifikasi');
         Route::post('/logout', 'logout');
