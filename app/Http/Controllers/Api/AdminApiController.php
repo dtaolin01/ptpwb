@@ -262,6 +262,9 @@ class AdminApiController extends Controller
             ]),
             'status' => collect(Pengiriman::STATUS)->map(fn ($v, $k) => ['kode' => $k, 'label' => $v[0], 'warna' => $v[1]])->values(),
             'resi_baru' => Pengiriman::resiBaru(),
+            // Isian cepat surat jalan
+            'barang'    => \App\Models\Barang::katalog(),
+            'penjual'   => \App\Models\Barang::daftarPenjual(),
         ]);
     }
 
@@ -378,6 +381,7 @@ class AdminApiController extends Controller
             return $p;
         });
 
+        \App\Models\Barang::pelajari($data['barang'] ?? null);
         $pesan = "Pengiriman {$p->no_resi} dibuat.";
         if (WhatsApp::aktif()) {
             [$ok, $ket] = SuratJalan::kirimKePelanggan($p);
@@ -424,6 +428,8 @@ class AdminApiController extends Controller
             $p->update(array_merge($baru, ['no_resi' => ($data['no_resi'] ?? '') ?: $p->no_resi]));
             $web->rapikanLangkahRute($p);
         });
+
+        \App\Models\Barang::pelajari($data['barang'] ?? null);
 
         return response()->json(['message' => "Pengiriman {$p->no_resi} diperbarui."]);
     }

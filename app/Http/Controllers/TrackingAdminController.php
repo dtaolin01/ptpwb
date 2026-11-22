@@ -122,6 +122,8 @@ class TrackingAdminController extends Controller
             return $p;
         });
 
+        \App\Models\Barang::pelajari($data['barang'] ?? null);   // barang baru tersimpan otomatis
+
         // Surat jalan langsung dikirim ke WhatsApp pelanggan (bila diaktifkan)
         $pesan = "Pengiriman {$pengiriman->no_resi} berhasil ditambahkan.";
         if (WhatsApp::aktif()) {
@@ -164,6 +166,8 @@ class TrackingAdminController extends Controller
             $this->simpanLangkah($pengiriman, $data['events'] ?? []);
             $this->rapikanLangkahRute($pengiriman);
         });
+
+        \App\Models\Barang::pelajari($data['barang'] ?? null);
 
         return redirect()->route('trackingAdmin', ['resi' => $pengiriman->no_resi])
             ->with('success', "Data tracking {$pengiriman->no_resi} berhasil diperbarui.");
@@ -293,6 +297,9 @@ class TrackingAdminController extends Controller
             'pengiriman' => $pengiriman,
             'events'     => old('events', $events),
             'pelanggan'  => Pelanggan::orderBy('nama')->get(['id', 'nama']),
+            'katalog'    => \App\Models\Barang::katalog(),
+            'penjualLama' => \App\Models\Barang::daftarPenjual(),
+            'terakhir'   => \App\Models\Barang::terakhirPerPelanggan(),
             'trucks'     => Truck::with('supir:id,nama')->orderBy('plat')->get(['id', 'plat', 'jenis', 'supir_id']),
         ]);
     }

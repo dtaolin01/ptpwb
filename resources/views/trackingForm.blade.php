@@ -138,7 +138,8 @@
 
             <div class="max-w-md">
                 <label for="penjual" class="{{ $label }}">Penjual</label>
-                <input id="penjual" name="penjual" value="{{ old('penjual', $pengiriman->penjual) }}" placeholder="Contoh: PT Semen Conch" class="{{ $input }}">
+                <input id="penjual" name="penjual" value="{{ old('penjual', $pengiriman->penjual) }}" list="pilihan-penjual" autocomplete="off" placeholder="Contoh: PT Semen Conch" class="{{ $input }}">
+                <datalist id="pilihan-penjual">@foreach ($penjualLama as $pj)<option value="{{ $pj }}">@endforeach</datalist>
                 {!! $err('penjual') !!}
             </div>
 
@@ -152,20 +153,26 @@
                         @foreach ($barang as $i => $b)
                             <tr class="baris-barang">
                                 <td class="no py-1 pr-2 text-xs text-slate-500">{{ $loop->iteration }}</td>
-                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][nama]" value="{{ $b['nama'] ?? '' }}" placeholder="Semen Conch 50kg" class="{{ $kecil }}"></td>
-                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][kode]" value="{{ $b['kode'] ?? '' }}" placeholder="SMN-50" class="{{ $kecil }}"></td>
-                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][qty]" value="{{ $b['qty'] ?? '' }}" inputmode="decimal" placeholder="500" class="{{ $kecil }}"></td>
-                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][satuan]" value="{{ $b['satuan'] ?? '' }}" list="pilihan-satuan" placeholder="sak" class="{{ $kecil }}"></td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][nama]" value="{{ $b['nama'] ?? '' }}" list="katalog-nama" autocomplete="off" placeholder="Ketik / pilih barang" class="isi-nama {{ $kecil }}"></td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][kode]" value="{{ $b['kode'] ?? '' }}" list="katalog-kode" autocomplete="off" placeholder="SMN-50" class="isi-kode {{ $kecil }}"></td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][qty]" value="{{ $b['qty'] ?? '' }}" inputmode="decimal" placeholder="500" class="isi-qty {{ $kecil }}"></td>
+                                <td class="py-1 pr-2"><input name="barang[{{ $i }}][satuan]" value="{{ $b['satuan'] ?? '' }}" list="pilihan-satuan" placeholder="sak" class="isi-satuan {{ $kecil }}"></td>
                                 <td class="py-1"><button type="button" class="hapus-barang rounded-md px-2 py-1 text-red-600 hover:bg-red-50" title="Hapus baris"><i class="fa-solid fa-xmark"></i></button></td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
+            <datalist id="katalog-nama">@foreach ($katalog as $k)<option value="{{ $k['nama'] }}">{{ trim(($k['kode'] ?? '').' '.($k['satuan'] ?? '')) }}</option>@endforeach</datalist>
+            <datalist id="katalog-kode">@foreach ($katalog as $k)@if ($k['kode'])<option value="{{ $k['kode'] }}">{{ $k['nama'] }}</option>@endif @endforeach</datalist>
             <datalist id="pilihan-satuan">
                 @foreach (['sak', 'zak', 'ton', 'kg', 'pcs', 'unit', 'batang', 'lembar', 'dus', 'm³', 'rit', 'liter'] as $s)<option value="{{ $s }}">@endforeach
             </datalist>
             @foreach ($errors->get('barang.*') as $pesan) <p class="mt-1 text-xs text-red-600">{{ $pesan[0] }}</p> @break @endforeach
+            <button type="button" id="salin-terakhir" class="mt-3 mr-2 hidden rounded-lg border border-pwb-line px-4 py-2 text-xs font-bold text-pwb-blue hover:bg-pwb-bg">
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Salin dari pengiriman terakhir pelanggan ini
+            </button>
+            <a href="{{ route('barang') }}" target="_blank" class="mt-3 ml-2 inline-block text-xs font-bold text-slate-500 hover:text-pwb-blue"><i class="fa-solid fa-boxes-stacked mr-1"></i>Kelola Data Barang</a>
             <button type="button" id="tambah-barang" class="mt-3 rounded-lg border border-pwb-line px-4 py-2 text-xs font-bold text-pwb-navy hover:bg-pwb-bg">
                 <i class="fa-solid fa-plus mr-1"></i> Tambah barang
             </button>
@@ -308,6 +315,47 @@
                 tr.querySelectorAll('input').forEach(function (inp) { inp.name = inp.name.replace(/barang\[\d+\]/, 'barang[' + i + ']'); });
             });
         }
+        // Isi otomatis kode & satuan dari Data Barang
+        var katalog = @json($katalog);
+        var cari = function (kolom, nilai) {
+            nilai = (nilai || '').trim().toLowerCase();
+            return nilai ? katalog.find(function (k) { return (k[kolom] || '').toLowerCase() === nilai; }) : null;
+        };
+        tbody.addEventListener('change', function (e) {
+            var tr = e.target.closest('tr.baris-barang');
+            if (!tr) return;
+            var k = e.target.classList.contains('isi-nama') ? cari('nama', e.target.value)
+                  : e.target.classList.contains('isi-kode') ? cari('kode', e.target.value) : null;
+            if (!k) return;
+            var isi = function (sel, v) { var el = tr.querySelector(sel); if (el && v && !el.value) el.value = v; };
+            if (e.target.classList.contains('isi-kode')) isi('.isi-nama', k.nama);
+            isi('.isi-kode', k.kode);
+            isi('.isi-satuan', k.satuan);
+            var qty = tr.querySelector('.isi-qty'); if (qty && !qty.value) qty.focus();
+        });
+
+        // Salin penjual & barang dari pengiriman terakhir pelanggan yang dipilih
+        var terakhir = @json((object) $terakhir);
+        var pilihPelanggan = document.getElementById('pelanggan_id');
+        var tombolSalin = document.getElementById('salin-terakhir');
+        function cekSalin() { tombolSalin.classList.toggle('hidden', !terakhir[pilihPelanggan.value]); }
+        pilihPelanggan.addEventListener('change', cekSalin); cekSalin();
+        tombolSalin.addEventListener('click', function () {
+            var t = terakhir[pilihPelanggan.value]; if (!t) return;
+            var pj = document.getElementById('penjual'); if (t.penjual && !pj.value) pj.value = t.penjual;
+            var contoh = tbody.querySelector('tr.baris-barang');
+            tbody.querySelectorAll('tr.baris-barang').forEach(function (tr, i) { if (i > 0) tr.remove(); });
+            (t.barang || []).forEach(function (b, i) {
+                var tr = i === 0 ? contoh : contoh.cloneNode(true);
+                tr.querySelector('.isi-nama').value = b.nama || '';
+                tr.querySelector('.isi-kode').value = b.kode || '';
+                tr.querySelector('.isi-qty').value = b.qty || '';
+                tr.querySelector('.isi-satuan').value = b.satuan || '';
+                if (i > 0) tbody.appendChild(tr);
+            });
+            nomori();
+        });
+
         document.getElementById('tambah-barang').addEventListener('click', function () {
             var baru = tbody.querySelector('tr.baris-barang').cloneNode(true);
             baru.querySelectorAll('input').forEach(function (inp) { inp.value = ''; });
