@@ -87,7 +87,7 @@ class PelangganController extends Controller
      * Titik dari peta (kalau admin menggeser/klik manual), atau dicari otomatis dari alamat.
      * Mengembalikan false kalau alamat tidak ditemukan.
      */
-    private function simpanTitik(Pelanggan $pelanggan, array $data, bool $cariUlang): bool
+    public function simpanTitik(Pelanggan $pelanggan, array $data, bool $cariUlang): bool
     {
         $manual = ($data['lokasi_sumber'] ?? null) === 'manual'
             && ($data['lat'] ?? null) !== null && ($data['lng'] ?? null) !== null;
@@ -105,7 +105,7 @@ class PelangganController extends Controller
         return true;
     }
 
-    private function tanpaTitik(array $data): array
+    public function tanpaTitik(array $data): array
     {
         return array_intersect_key($data, array_flip(['nama', 'kontak', 'telepon', 'email', 'alamat']));
     }
