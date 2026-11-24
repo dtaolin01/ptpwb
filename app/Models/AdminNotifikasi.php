@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Kejadian penting untuk aplikasi PWB Admin (muncul sebagai notifikasi HP):
- *   status    : truk masuk pabrik, berangkat, tiba, pengiriman selesai
+ *   status    : truk mendekati / masuk / keluar pabrik, berangkat, tiba, pengiriman selesai
  *   pesan     : pesan baru dari formulir kontak website
  *   akun      : pendaftaran akun admin baru (hanya untuk pemilik)
  *   gps       : truk dengan pesanan aktif tidak mengirim lokasi lama
@@ -32,10 +32,47 @@ class AdminNotifikasi extends Model
         return $this->belongsTo(Pengiriman::class);
     }
 
+    /** Notifikasi radius pabrik yang menggantikan notifikasi perubahan status (supaya tidak dobel). */
+    private const SAMA_DENGAN_STATUS = [
+        'tiba'   => 'muat',              // masuk radius pabrik  ≈ status Muat
+        'keluar' => 'dalam_perjalanan',  // keluar pabrik        ≈ status Berangkat
+    ];
+
+    /** Menit: dua notifikasi untuk kejadian yang sama dalam rentang ini dianggap dobel. */
+    private const RENTANG_DOBEL = 15;
+
+    /** Truk mendekati / masuk / keluar radius pabrik (dari DeteksiPabrik), dengan atau tanpa pesanan. */
+    public static function dariPabrik(string $jenis, string $judul, string $pesan, Truck $truck, ?Pengiriman $p, $waktu): void
+    {
+        rescue(function () use ($jenis, $judul, $pesan, $truck, $p) {
+            // Sudah ada notifikasi status yang sama (mis. admin/sistem baru saja mengubah status ke Muat)
+            $status = self::SAMA_DENGAN_STATUS[$jenis] ?? null;
+            if ($status && static::where('truck_id', $truck->id)->where('judul', self::STATUS_PENTING[$status])
+                ->where('created_at', '>=', now()->subMinutes(self::RENTANG_DOBEL))->exists()) {
+                return;
+            }
+            $isi = $pesan.($p ? ' · '.$p->no_resi : ' · tanpa pesanan aktif');
+
+            static::create([
+                'jenis'         => 'status',
+                'judul'         => $judul,
+                'isi'           => mb_substr($isi, 0, 255),
+                'pengiriman_id' => $p?->id,
+                'truck_id'      => $truck->id,
+            ]);
+        }, report: false);
+    }
+
     public static function dariStatus(Pengiriman $p): void
     {
         $judul = self::STATUS_PENTING[$p->status] ?? null;
         if (! $judul) {
+            return;
+        }
+        // Sudah diberitahukan lewat notifikasi radius pabrik
+        $judulPabrik = ['muat' => 'Truk tiba di pabrik', 'dalam_perjalanan' => 'Truk keluar dari pabrik'][$p->status] ?? null;
+        if ($judulPabrik && $p->truck_id && static::where('truck_id', $p->truck_id)->where('judul', $judulPabrik)
+            ->where('created_at', '>=', now()->subMinutes(self::RENTANG_DOBEL))->exists()) {
             return;
         }
         $p->loadMissing(['truck', 'pelanggan']);

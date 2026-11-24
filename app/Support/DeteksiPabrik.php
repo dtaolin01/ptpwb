@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\AdminNotifikasi;
 use App\Models\LokasiTruk;
 use App\Models\NotifikasiPabrik;
 use App\Models\Pengiriman;
@@ -11,7 +12,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Mendeteksi truk mendekati / tiba di / keluar dari pabrik dari lokasi HP supir,
- * lalu menyimpan notifikasi untuk aplikasi PWB Checker.
+ * lalu menyimpan notifikasi untuk aplikasi PWB Checker dan PWB Admin.
  *
  * Zona (diatur di menu Lokasi Pabrik):
  *   - radius_pabrik  : di dalam pabrik
@@ -74,6 +75,9 @@ class DeteksiPabrik
         if ($p && $jenis !== 'keluar') {
             $pesan = mb_substr($pesan.' Muatan: '.SuratJalan::ringkasMuatan($p), 0, 250);
         }
+
+        // Admin juga diberi tahu (aplikasi PWB Admin), sekali per kejadian
+        AdminNotifikasi::dariPabrik($jenis, $judul, $pesan, $truck, $p, $waktu);
 
         return NotifikasiPabrik::create([
             'jenis'         => $jenis,
