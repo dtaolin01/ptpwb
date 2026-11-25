@@ -3,6 +3,7 @@
 use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\Api\AdminApiController;
 use App\Http\Controllers\Api\CheckerApiController;
+use App\Http\Controllers\Api\SinkronController;
 use App\Http\Controllers\Api\SupirApiController;
 use App\Http\Middleware\AdminApi;
 use App\Http\Middleware\CheckerApi;
@@ -85,6 +86,9 @@ Route::prefix('admin')->controller(AdminApiController::class)->group(function ()
         Route::get('/pesan', 'daftarPesan');
         Route::post('/pesan/{id}/baca', 'bacaPesan')->whereNumber('id');
         Route::delete('/pesan/{id}', 'hapusPesan')->whereNumber('id');
+
+        // Salin data (baca-saja) ke PostgreSQL — hanya pemilik website
+        Route::get('/sinkron', [SinkronController::class, 'tarik']);
 
         Route::get('/akun', 'daftarAkun');
         Route::post('/akun/{id}/setujui', 'setujuiAkun')->whereNumber('id');
